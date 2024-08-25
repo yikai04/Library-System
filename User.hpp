@@ -24,10 +24,10 @@ class User
 		//void changePassword(std::wstring newPassword);
 
 		Book getBookInfoById(int id);
-		std::vector<Book> searchBooksInfoByName(std::wstring bookName, const std::wstring& category = L"全部");
-		//std::vector<Book> searchBooksInfoByAuthor(std::wstring author, const std::wstring& category = L"全部");
-		//std::vector<Book> searchBooksInfoByPublisher(std::wstring publisher, const std::wstring& category = L"全部");
-		//std::vector<Book> searchBooksInfoByCategory(BookCategory category);
+		std::vector<Book> searchBooksInfo(std::wstring searchWord = L"", const std::wstring& category = L"全部");
+		std::vector<Book> searchBooksInfoByName(std::wstring bookName = L"", const std::wstring& category = L"全部");
+		std::vector<Book> searchBooksInfoByAuthor(std::wstring author = L"", const std::wstring& category = L"全部");
+		std::vector<Book> searchBooksInfoByPublisher(std::wstring publisher = L"", const std::wstring& category = L"全部");
 		//std::vector<Book> searchBooksInfoByDescription(std::wstring description);
 
 		//void borrowBook(int bookId);

@@ -606,7 +606,7 @@ void TextBox::_setCaretPosition(sf::Vector2i mousePosition)
 
 
 DropDown::DropDown(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring defaultOption) :
-	_dropDownButton(size, position, sf::Color(200, 200, 200, 255), defaultOption + L"▼", font, fontSize, sf::Color::Black, [&]() {this->switchDropDownVisible(); }),
+	_dropDownButton(size, position, sf::Color(200, 200, 200, 255), defaultOption + L"▼", font, fontSize, sf::Color::Black, [&]() {this->dropDownButtonOnClickHandler(); }),
 	_selectedOption(defaultOption),
 	_isDropDownVisible(false),
 	_font(font),
@@ -634,11 +634,6 @@ bool DropDown::isDropDownVisible()
 	return _isDropDownVisible;
 }
 
-void DropDown::switchDropDownVisible()
-{
-	_isDropDownVisible = !_isDropDownVisible;
-}
-
 void DropDown::setDropDownVisible(bool isVisible)
 {
 	_isDropDownVisible = isVisible;
@@ -654,6 +649,21 @@ void DropDown::setSelectOption(const std::wstring& option)
 	_createOptionButtons();
 }
 
+std::wstring DropDown::getSelectedOption()
+{
+	return _selectedOption;
+}
+
+bool DropDown::getVisibility()
+{
+	return _isDropDownVisible;
+}
+
+void DropDown::dropDownButtonOnClickHandler()
+{
+	_isDropDownVisible = !_isDropDownVisible;
+}
+
 void DropDown::optionButtonOnClickHandler(std::wstring option)
 {
 	setDropDownVisible(false);
@@ -664,8 +674,9 @@ void DropDown::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 {
 	_dropDownButton.handleEvent(event, window);
 	if (_isDropDownVisible) {
-		if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-			//setDropDownVisible(false);
+		sf::FloatRect floatRect(_dropDownButton.getPosition(), _dropDownButton.getSize());
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !floatRect.contains(static_cast<sf::Vector2f>(sf::Mouse::getPosition(window))) ) {
+			setDropDownVisible(false);
 		}
 		
 		if (!_optionButtons.empty()) {
@@ -712,11 +723,12 @@ void DropDown::_deleteOptionButtons()
 
 
 
-SearchBar::SearchBar(float width, sf::Vector2f position, const std::wstring placeHolderText, const sf::Font& font, const int& fontSize) :
+SearchBar::SearchBar(float width, sf::Vector2f position, const std::wstring placeHolderText, const sf::Font& font, const int& fontSize, std::function<void()> searchHandler) :
 	TextBox(width, position, font, fontSize, placeHolderText),
-	_searchButton(sf::Vector2f(_textBox.getSize().y, _textBox.getSize().y), sf::Vector2f(_textBox.getPosition().x + _textBox.getSize().x, _textBox.getPosition().y), "Icon/searchIcon.png"),
+	_searchButton(sf::Vector2f(_textBox.getSize().y, _textBox.getSize().y), sf::Vector2f(_textBox.getPosition().x + _textBox.getSize().x, _textBox.getPosition().y), "Icon/searchIcon.png", searchHandler),
 	_bookCategoryDropDown(sf::Vector2f(350.f, _textBox.getSize().y), sf::Vector2f(_textBox.getPosition().x - 350.f, _textBox.getPosition().y), font, fontSize, L"全部"),
-	_searchTypeDropDown(sf::Vector2f(200.f, _textBox.getSize().y), sf::Vector2f(_textBox.getPosition().x + width + _textBox.getSize().y, _textBox.getPosition().y), font, fontSize, L"全部")
+	_searchTypeDropDown(sf::Vector2f(200.f, _textBox.getSize().y), sf::Vector2f(_textBox.getPosition().x + width + _textBox.getSize().y, _textBox.getPosition().y), font, fontSize, L"全部"),
+	_searchHandler(searchHandler)
 {
 	_bookCategoryDropDown.setOptions({ L"全部", L"小说类", L"传记与回忆录", L"历史与文化", L"科学与自然", L"商业与经济", L"健康与生活方式", L"艺术与设计", L"语言与文学", L"参考手册", L"儿童读物", L"其他"});
 	_searchTypeDropDown.setOptions({ L"全部", L"书名", L"作者", L"出版社"});
@@ -727,12 +739,40 @@ SearchBar::~SearchBar()
 
 }
 
+std::wstring SearchBar::getCategory()
+{
+	return _bookCategoryDropDown.getSelectedOption();
+}
+
+std::wstring SearchBar::getFilter()
+{
+	return _searchTypeDropDown.getSelectedOption();
+}
+
+std::wstring SearchBar::getSearchWord()
+{
+	return _inputString;
+}
+
+bool SearchBar::getDropDownVisibility()
+{
+	return _bookCategoryDropDown.getVisibility() || _searchTypeDropDown.getVisibility();
+}
+
 void SearchBar::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 {
 	TextBox::handleEvent(event, window);
 	_searchButton.handleEvent(event, window);
 	_bookCategoryDropDown.handleEvent(event, window);
 	_searchTypeDropDown.handleEvent(event, window);
+	
+	if (event.type == sf::Event::KeyPressed) {
+		if (event.key.code == sf::Keyboard::Enter) {
+			_searchHandler();
+			_bookCategoryDropDown.setDropDownVisible(false);
+			_searchTypeDropDown.setDropDownVisible(false);
+		}
+	}
 }
 
 void SearchBar::update(sf::Time dt)
@@ -1007,7 +1047,8 @@ void BooksDisplayInPage::setBooks(std::vector<Book>&& books)
 {
 	_books = std::move(books);
 
-	_maxBooksIndex = _books.size() - 1;
+	_maxBooksIndex = _books.size();
+	_currentDisplayPage = 0;
 	_updateDisplay();
 }
 
@@ -1027,7 +1068,7 @@ void BooksDisplayInPage::handleEvent(const sf::Event& event, sf::RenderWindow& w
 	if (_currentDisplayPage != 0) {
 		_leftArrow.handleEvent(event, window);
 	}
-	if (_currentDisplayPage * 10 + 10 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 10 + 10 < _maxBooksIndex) {
 		_rightArrow.handleEvent(event, window);
 	}
 }
@@ -1053,7 +1094,7 @@ void BooksDisplayInPage::render(sf::RenderWindow& window)
 	if (_currentDisplayPage != 0) {
 		_leftArrow.render(window);
 	}
-	if (_currentDisplayPage * 10 + 10 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 10 + 10 < _maxBooksIndex) {
 		_rightArrow.render(window);
 	}
 }
@@ -1095,64 +1136,70 @@ void BooksDisplayInPage::switchRightDisplay()
 
 void BooksDisplayInPage::_updateDisplay()
 {
-	_bookDisplay1.setBook(&_books[_currentDisplayPage * 10]);
-	if (_currentDisplayPage * 10 + 1 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 10 < _maxBooksIndex) {
+		_bookDisplay1.setBook(&_books[_currentDisplayPage * 10]);
+		_bookDisplay1.setVisiblity(true);
+	}
+	else {
+		_bookDisplay1.setVisiblity(false);
+	}
+	if (_currentDisplayPage * 10 + 1 < _maxBooksIndex) {
 		_bookDisplay2.setBook(&_books[_currentDisplayPage * 10 + 1]);
 		_bookDisplay2.setVisiblity(true);
 	}
 	else {
 		_bookDisplay2.setVisiblity(false);
 	}
-	if (_currentDisplayPage * 10 + 2 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 10 + 2 < _maxBooksIndex) {
 		_bookDisplay3.setBook(&_books[_currentDisplayPage * 10 + 2]);
 		_bookDisplay3.setVisiblity(true);
 	}
 	else {
 		_bookDisplay3.setVisiblity(false);
 	}
-	if (_currentDisplayPage * 10 + 3 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 10 + 3 < _maxBooksIndex) {
 		_bookDisplay4.setBook(&_books[_currentDisplayPage * 10 + 3]);
 		_bookDisplay4.setVisiblity(true);
 	}
 	else {
 		_bookDisplay4.setVisiblity(false);
 	}
-	if (_currentDisplayPage * 10 + 4 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 10 + 4 < _maxBooksIndex) {
 		_bookDisplay5.setBook(&_books[_currentDisplayPage * 10 + 4]);
 		_bookDisplay5.setVisiblity(true);
 	}
 	else {
 		_bookDisplay5.setVisiblity(false);
 	}
-	if (_currentDisplayPage * 10 + 5 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 10 + 5 < _maxBooksIndex) {
 		_bookDisplay6.setBook(&_books[_currentDisplayPage * 10 + 5]);
 		_bookDisplay6.setVisiblity(true);
 	}
 	else {
 		_bookDisplay6.setVisiblity(false);
 	}
-	if (_currentDisplayPage * 10 + 6 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 10 + 6 < _maxBooksIndex) {
 		_bookDisplay7.setBook(&_books[_currentDisplayPage * 10 + 6]);
 		_bookDisplay7.setVisiblity(true);
 	}
 	else {
 		_bookDisplay7.setVisiblity(false);
 	}
-	if (_currentDisplayPage * 10 + 7 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 10 + 7 < _maxBooksIndex) {
 		_bookDisplay8.setBook(&_books[_currentDisplayPage * 10 + 7]);
 		_bookDisplay8.setVisiblity(true);
 	}
 	else {
 		_bookDisplay8.setVisiblity(false);
 	}
-	if (_currentDisplayPage * 10 + 8 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 10 + 8 < _maxBooksIndex) {
 		_bookDisplay9.setBook(&_books[_currentDisplayPage * 10 + 8]);
 		_bookDisplay9.setVisiblity(true);
 	}
 	else {
 		_bookDisplay9.setVisiblity(false);
 	}
-	if (_currentDisplayPage * 10 + 9 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 10 + 9 < _maxBooksIndex) {
 		_bookDisplay10.setBook(&_books[_currentDisplayPage * 10 + 9]);
 		_bookDisplay10.setVisiblity(true);
 	}

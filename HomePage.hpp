@@ -11,8 +11,8 @@ class HomePage : public PageBase
 		void update(sf::Time dt);
 		void render(sf::RenderWindow& window);
 	private:
-		sf::Texture mBackgroundTexture;
-		sf::Sprite mSprite;
+		sf::Texture _backgroundTexture;
+		sf::Sprite _sprite;
 
 		TextToogleButton _topBarButton1;
 		TextToogleButton _topBarButton2;
@@ -20,8 +20,7 @@ class HomePage : public PageBase
 		TextToogleButton _topBarButton4;
 		TextToogleButton _topBarButton5;
 		TextToogleButton _topBarButton6;
-		SearchBar _searchBar;
 
-		BookDisplay _bookDisplay;
+		SearchBar _searchBar;
 		BooksDisplayInRow _bookRowDisplay;
 };

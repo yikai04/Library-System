@@ -130,9 +130,11 @@ class DropDown
 		~DropDown();
 		void setOptions(std::vector<std::wstring> options);
 		bool isDropDownVisible();
-		void switchDropDownVisible();
 		void setDropDownVisible(bool isVisible);
 		void setSelectOption(const std::wstring& option);
+		std::wstring getSelectedOption();
+		bool getVisibility();
+		void dropDownButtonOnClickHandler();
 		void optionButtonOnClickHandler(std::wstring option);
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
 		void render(sf::RenderWindow& window);
@@ -152,8 +154,12 @@ class DropDown
 class SearchBar : public TextBox
 {
 	public:
-		SearchBar(float width, sf::Vector2f position, const std::wstring placeHolderText, const sf::Font& font, const int& fontSize);
+		SearchBar(float width, sf::Vector2f position, const std::wstring placeHolderText, const sf::Font& font, const int& fontSize, std::function<void()> searchHandler = []() {});
 		~SearchBar();
+		std::wstring getCategory();
+		std::wstring getFilter();
+		std::wstring getSearchWord();
+		bool getDropDownVisibility();
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
 		void update(sf::Time dt);
 		void render(sf::RenderWindow& window);
@@ -162,6 +168,7 @@ class SearchBar : public TextBox
 		IconButton _searchButton;
 		DropDown _bookCategoryDropDown;
 		DropDown _searchTypeDropDown;
+		std::function<void()> _searchHandler;
 };
 
 class PageNumber : TextBox

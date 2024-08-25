@@ -78,6 +78,78 @@ Book User::getBookInfoById(int id)
 	}
 }
 
+std::vector<Book> User::searchBooksInfo(std::wstring searchWord, const std::wstring& category)
+{
+	const char* sql = "SELECT * FROM book_info WHERE (book_name LIKE ? OR author LIKE ? OR publisher LIKE ?) AND category LIKE ?";
+	int rc;
+	std::vector<Book> books;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		return books;
+	}
+
+	std::string searchWordStr;
+	if (searchWord == L"") {
+		searchWordStr = '%';
+	}
+	else {
+		searchWordStr = wstring_to_string(searchWord);
+		searchWordStr = '%' + searchWordStr + '%';
+	}
+	rc = sqlite3_bind_text(stmt, 1, searchWordStr.c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text(stmt, 2, searchWordStr.c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text(stmt, 3, searchWordStr.c_str(), -1, SQLITE_STATIC);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to search word: " << sqlite3_errmsg(mDatabase) << std::endl;
+		return books;
+	}
+
+	std::string categoryStr;
+	if (category == L"全部") {
+		categoryStr = '%';
+	}
+	else {
+		categoryStr = wstring_to_string(category);
+		categoryStr = '%' + categoryStr + '%';
+	}
+	rc = sqlite3_bind_text(stmt, 4, categoryStr.c_str(), -1, SQLITE_STATIC);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to category: " << sqlite3_errmsg(mDatabase) << std::endl;
+		return books;
+	}
+
+	rc = sqlite3_step(stmt);
+	while (rc == SQLITE_ROW) {
+		Book book;
+		book.setId(sqlite3_column_int(stmt, 0));
+		book.setBookName(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 1)));
+		book.setAuthor(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 2)));
+		book.setPublisher(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 3)));
+		book.setCategory(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 4)));
+		book.setPublishDate(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 5)));
+		book.setPages(sqlite3_column_int(stmt, 6));
+		book.setTotalBooks(sqlite3_column_int(stmt, 7));
+		book.setAvailableBooks(sqlite3_column_int(stmt, 8));
+		book.setPrice(sqlite3_column_double(stmt, 9));
+		book.setDescription(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 10)));
+		book.setImgUrl(std::string((const char*)sqlite3_column_text(stmt, 11)));
+		book.setDelFlg(sqlite3_column_int(stmt, 12));
+
+		books.push_back(book);
+
+		rc = sqlite3_step(stmt);
+	}
+
+	if (rc != SQLITE_DONE) {
+		std::cerr << "Search book by book name failed: " << sqlite3_errmsg(mDatabase) << std::endl;
+	}
+
+	sqlite3_finalize(stmt);
+	return books;
+}
+
 std::vector<Book> User::searchBooksInfoByName(std::wstring bookName, const std::wstring& category)
 {
 	const char* sql = "SELECT * FROM book_info WHERE book_name LIKE ? AND category LIKE ?";
@@ -90,11 +162,18 @@ std::vector<Book> User::searchBooksInfoByName(std::wstring bookName, const std::
 		return books;
 	}
 
-	std::string bookNameStr = wstring_to_string(bookName);
-	bookNameStr = '%' + bookNameStr + '%';
+	std::string bookNameStr;
+	if (bookName == L"") {
+		bookNameStr = '%';
+	}
+	else {
+		bookNameStr = wstring_to_string(bookName);
+		bookNameStr = '%' + bookNameStr + '%';
+	}
+
 	rc = sqlite3_bind_text(stmt, 1, bookNameStr.c_str(), -1, SQLITE_STATIC);
 	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		std::cerr << "Failed to book name: " << sqlite3_errmsg(mDatabase) << std::endl;
 		return books;
 	}
 
@@ -108,7 +187,7 @@ std::vector<Book> User::searchBooksInfoByName(std::wstring bookName, const std::
 	}
 	rc = sqlite3_bind_text(stmt, 2, categoryStr.c_str(), -1, SQLITE_STATIC);
 	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		std::cerr << "Failed to category: " << sqlite3_errmsg(mDatabase) << std::endl;
 		return books;
 	}
 
@@ -138,5 +217,148 @@ std::vector<Book> User::searchBooksInfoByName(std::wstring bookName, const std::
 		std::cerr << "Search book by book name failed: " << sqlite3_errmsg(mDatabase) << std::endl;
 	}
 	
+	sqlite3_finalize(stmt);
+	return books;
+}
+
+std::vector<Book> User::searchBooksInfoByAuthor(std::wstring author, const std::wstring& category)
+{
+	const char* sql = "SELECT * FROM book_info WHERE author LIKE ? AND category LIKE ?";
+	int rc;
+	std::vector<Book> books;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		return books;
+	}
+
+	std::string authorStr;
+	if (author == L"") {
+		authorStr = '%';
+	}
+	else {
+		authorStr = wstring_to_string(author);
+		authorStr = '%' + authorStr + '%';
+	}
+
+	rc = sqlite3_bind_text(stmt, 1, authorStr.c_str(), -1, SQLITE_STATIC);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to author: " << sqlite3_errmsg(mDatabase) << std::endl;
+		return books;
+	}
+
+	std::string categoryStr;
+	if (category == L"全部") {
+		categoryStr = '%';
+	}
+	else {
+		categoryStr = wstring_to_string(category);
+		categoryStr = '%' + categoryStr + '%';
+	}
+	rc = sqlite3_bind_text(stmt, 2, categoryStr.c_str(), -1, SQLITE_STATIC);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to category: " << sqlite3_errmsg(mDatabase) << std::endl;
+		return books;
+	}
+
+	rc = sqlite3_step(stmt);
+	while (rc == SQLITE_ROW) {
+		Book book;
+		book.setId(sqlite3_column_int(stmt, 0));
+		book.setBookName(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 1)));
+		book.setAuthor(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 2)));
+		book.setPublisher(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 3)));
+		book.setCategory(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 4)));
+		book.setPublishDate(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 5)));
+		book.setPages(sqlite3_column_int(stmt, 6));
+		book.setTotalBooks(sqlite3_column_int(stmt, 7));
+		book.setAvailableBooks(sqlite3_column_int(stmt, 8));
+		book.setPrice(sqlite3_column_double(stmt, 9));
+		book.setDescription(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 10)));
+		book.setImgUrl(std::string((const char*)sqlite3_column_text(stmt, 11)));
+		book.setDelFlg(sqlite3_column_int(stmt, 12));
+
+		books.push_back(book);
+
+		rc = sqlite3_step(stmt);
+	}
+
+	if (rc != SQLITE_DONE) {
+		std::cerr << "Search book by book name failed: " << sqlite3_errmsg(mDatabase) << std::endl;
+	}
+
+	sqlite3_finalize(stmt);
+	return books;
+}
+
+std::vector<Book> User::searchBooksInfoByPublisher(std::wstring publisher, const std::wstring& category)
+{
+	const char* sql = "SELECT * FROM book_info WHERE publisher LIKE ? AND category LIKE ?";
+	int rc;
+	std::vector<Book> books;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		return books;
+	}
+
+	std::string publisherStr;
+	if (publisher == L"") {
+		publisherStr = '%';
+	}
+	else {
+		publisherStr = wstring_to_string(publisher);
+		publisherStr = '%' + publisherStr + '%';
+	}
+
+	rc = sqlite3_bind_text(stmt, 1, publisherStr.c_str(), -1, SQLITE_STATIC);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to book name: " << sqlite3_errmsg(mDatabase) << std::endl;
+		return books;
+	}
+
+	std::string categoryStr;
+	if (category == L"全部") {
+		categoryStr = '%';
+	}
+	else {
+		categoryStr = wstring_to_string(category);
+		categoryStr = '%' + categoryStr + '%';
+	}
+	rc = sqlite3_bind_text(stmt, 2, categoryStr.c_str(), -1, SQLITE_STATIC);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to category: " << sqlite3_errmsg(mDatabase) << std::endl;
+		return books;
+	}
+
+	rc = sqlite3_step(stmt);
+	while (rc == SQLITE_ROW) {
+		Book book;
+		book.setId(sqlite3_column_int(stmt, 0));
+		book.setBookName(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 1)));
+		book.setAuthor(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 2)));
+		book.setPublisher(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 3)));
+		book.setCategory(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 4)));
+		book.setPublishDate(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 5)));
+		book.setPages(sqlite3_column_int(stmt, 6));
+		book.setTotalBooks(sqlite3_column_int(stmt, 7));
+		book.setAvailableBooks(sqlite3_column_int(stmt, 8));
+		book.setPrice(sqlite3_column_double(stmt, 9));
+		book.setDescription(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 10)));
+		book.setImgUrl(std::string((const char*)sqlite3_column_text(stmt, 11)));
+		book.setDelFlg(sqlite3_column_int(stmt, 12));
+
+		books.push_back(book);
+
+		rc = sqlite3_step(stmt);
+	}
+
+	if (rc != SQLITE_DONE) {
+		std::cerr << "Search book by book name failed: " << sqlite3_errmsg(mDatabase) << std::endl;
+	}
+
+	sqlite3_finalize(stmt);
 	return books;
 }
