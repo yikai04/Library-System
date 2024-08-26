@@ -3,14 +3,17 @@
 
 int main()
 {
-    loadDataBase();
+    if (!loadDataBase()) {
+        return 1;
+    }
+    insertDatas("Database/insertUserInfoSql.txt");
     insertDatas("Database/insertBookInfoSql.txt");
+    insertDatas("Database/insertBorrowInfoSql.txt");
 
     User user1;
-    //std::vector<Book> books = user1.searchBooksInfoByName(L"了", L"传记与回忆录");
     user1.run();
 
-    
+
 
     closeDataBase();
     return 0;

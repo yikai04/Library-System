@@ -1,15 +1,20 @@
 ﻿#pragma once	
+
+#define LOGIN_SUCESSFUL 0
+#define INVALID_USERNAME 1
+#define WRONG_PASSWORD 2
+#define SQLITE_DATABASE_ERROR 3
+
 #include "Dependencies/sqlite3/sqlite3.h"
 #include <string>
 #include "Config.h"
-
 
 constexpr const char* CREATE_USER_INFO_TABLE_SQLCMD = "CREATE TABLE IF NOT EXISTS `user_info` ( \
 														`id` INT(11) NOT NULL , \
 														`name` varchar(200) DEFAULT NULL , \
 														`username` varchar(50) DEFAULT NULL , \
 														`password` varchar(50) DEFAULT NULL , \
-														`role` varchar(50) DEFAULT '其他' , \
+														`role` varchar(50) DEFAULT 'Student' , \
 														`register_date` date DEFAULT NULL , \
 														`gender` varchar(1) DEFAULT NULL , \
 														`email` varchar(50) DEFAULT NULL , \
@@ -59,6 +64,7 @@ class Date
 		Date(const Date& date);
 		Date(std::string date);
 		Date(std::wstring date);
+		Date operator=(const Date& date);
 		~Date();
 		void setDate(std::string date);
 		void setDate(std::wstring date);

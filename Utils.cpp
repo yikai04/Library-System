@@ -18,14 +18,28 @@ bool loadDataBase()
 		return false;
 	}
 
+	//create user_info table
+	rc = sqlite3_exec(mDatabase, CREATE_USER_INFO_TABLE_SQLCMD, NULL, NULL, NULL);
+
+	if (rc) {
+		std::cout << "Failed to create user table: " << sqlite3_errmsg(mDatabase) << std::endl;
+	}
+
 	//create book_info table
 	rc = sqlite3_exec(mDatabase, CREATE_BOOK_INFO_TABLE_SQLCMD, NULL, NULL, NULL);
 
 	if (rc) {
-		std::cout << "Failed to create user table: " << sqlite3_errmsg(mDatabase) << std::endl;
-		return false;
+		std::cout << "Failed to create book table: " << sqlite3_errmsg(mDatabase) << std::endl;
 	}
-		return true;
+
+	//create borrow_info table
+	rc = sqlite3_exec(mDatabase, CREATE_BORROW_INFO_TABLE_SQLCMD, NULL, NULL, NULL);
+
+	if (rc) {
+		std::cout << "Failed to create borrow table: " << sqlite3_errmsg(mDatabase) << std::endl;
+	}
+
+	return true;
 }
 
 void closeDataBase()
@@ -102,6 +116,14 @@ Date::Date(std::string date)
 Date::Date(std::wstring date)
 {
     _stringToDate(date);
+}
+
+Date Date::operator=(const Date& date)
+{
+	_year = date._year;
+	_month = date._month;
+	_day = date._day;
+	return *this;
 }
 
 Date::~Date()

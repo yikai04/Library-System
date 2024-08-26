@@ -2,11 +2,13 @@
 #include <SFML/Graphics.hpp>
 #include "PageManager.hpp"
 #include "Book.hpp"
+#include "BorrowBookDetail.hpp"
 
 enum UserType
 {
 	Guest,
-	Normal,
+	Student,
+	Teacher,
 	Admin
 };
 
@@ -16,8 +18,9 @@ class User
 		User();
 		~User();
 		void run();
-		//bool login(std::wstring username, std::wstring password);
-		//void logout();
+		int login(std::string username, std::string password);
+		void logout();
+		UserType getUserType();
 		//void registerAccount(std::wstring username, std::wstring password);
 		//void deleteAccount();
 		//void changeUsername(std::wstring newUsername);
@@ -30,6 +33,7 @@ class User
 		std::vector<Book> searchBooksInfoByPublisher(std::wstring publisher = L"", const std::wstring& category = L"全部");
 		//std::vector<Book> searchBooksInfoByDescription(std::wstring description);
 
+		std::vector<BorrowBookDetail> getBorrowedBooks();
 		//void borrowBook(int bookId);
 		//void returnBook(int bookId);
 		//void addBook(Book book);
@@ -38,6 +42,7 @@ class User
 
 
 	private:
+		void _setUserType(std::string type);
 		sf::RenderWindow _window;
 		sf::Clock _clock;
 		UserType _userType;

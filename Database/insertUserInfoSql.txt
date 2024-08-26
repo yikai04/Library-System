@@ -1,0 +1,2 @@
+INSERT INTO `user_info` VALUES ('2023080001', '黄小明', 'xiaoming', '12345678', 'Student',  '2024-07-26', 'M', 'xiaoming@qq.com', '0');
+INSERT INTO `user_info` VALUES ('2023080002', '叶小华', 'xiaohua', 'abcde', 'Teacher',  '2024-08-15', 'M', 'xiaohua@qq.com', '0');

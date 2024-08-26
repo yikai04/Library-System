@@ -268,3 +268,42 @@ class BooksDisplayInPage
 		int _currentDisplayPage;
 		int _maxBooksIndex;
 };
+
+class Table
+{
+public:
+	Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2);
+	~Table();
+	void setHeaders(std::vector<std::wstring>&& headers);
+	void setRows(std::vector<std::vector<std::wstring>>&& rows);
+	void handleEvent(const sf::Event& event, sf::RenderWindow& window);
+	void render(sf::RenderWindow& window);
+
+protected:
+	class _row {
+		public:
+			_row(sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring> rowData, std::vector<float> rowWidth, sf::Color backgroundColor);
+			~_row();
+			void handleEvent(const sf::Event& event, sf::RenderWindow& window);
+			void render(sf::RenderWindow& window);
+
+		private:
+			std::vector<TextToogleButton*> _rowButtons;
+			std::vector<std::wstring> _rowData;
+			std::vector<float> _rowWidth;
+	};
+	void _updateRows();
+	void _updateHeaders();
+	std::vector<std::vector<std::wstring>> _rowsData;
+	std::vector<std::wstring> _headers;
+	std::vector<TextToogleButton*> _headerButtons;
+	std::vector<_row*> _rowDisplay;
+	std::vector<float> _rowWidth;
+	sf::View _view;
+	sf::Font _font;
+	sf::Color _headerColor;
+	sf::Color _rowColor1;
+	sf::Color _rowColor2;
+	sf::Vector2f _position;
+	int _fontSize;
+};

@@ -148,21 +148,24 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Book.hpp" />
+    <ClInclude Include="BorrowBookDetail.hpp" />
     <ClInclude Include="Config.h" />
-    <ClInclude Include="Database.hpp" />
     <ClInclude Include="Dependencies\sqlite3\sqlite3.h" />
     <ClInclude Include="Dependencies\sqlite3\sqlite3ext.h" />
     <ClInclude Include="LoginPage.hpp" />
     <ClInclude Include="PageManager.hpp" />
     <ClInclude Include="HomePage.hpp" />
+    <ClInclude Include="RecordsPage.hpp" />
     <ClInclude Include="SearchPage.hpp" />
+    <ClInclude Include="SettingPage.hpp" />
+    <ClInclude Include="StatisticsPage.hpp" />
     <ClInclude Include="User.hpp" />
     <ClInclude Include="Utils.hpp" />
     <ClInclude Include="Widgets.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Book.cpp" />
-    <ClCompile Include="Database.cpp" />
+    <ClCompile Include="BorrowBookDetail.cpp" />
     <ClCompile Include="Dependencies\sqlite3\shell.c" />
     <ClCompile Include="Dependencies\sqlite3\sqlite3.c" />
     <ClCompile Include="LoginPage.cpp" />
@@ -171,7 +174,10 @@
     <ClCompile Include="PageBase.hpp" />
     <ClCompile Include="PageManager.cpp" />
     <ClCompile Include="HomePage.cpp" />
+    <ClCompile Include="RecordsPage.cpp" />
     <ClCompile Include="SearchPage.cpp" />
+    <ClCompile Include="SettingPage.cpp" />
+    <ClCompile Include="StatisticsPage.cpp" />
     <ClCompile Include="User.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="Widgets.cpp" />

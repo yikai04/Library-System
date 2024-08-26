@@ -11,6 +11,7 @@ enum class Page
     Search,
     Login,
     Records,
+	Statistics,
     Setting
 };
 

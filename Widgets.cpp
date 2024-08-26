@@ -837,7 +837,8 @@ void PageNumber::render(sf::RenderWindow& window)
 BookDisplay::BookDisplay(sf::Vector2f bookCoverSize, sf::Vector2f position, const sf::Font& font, const int& fontSize, bool isVisible) :
 	_bookCover(bookCoverSize, position, "Icon/blankBook.jpg"),
 	_bookName(sf::Vector2f(bookCoverSize.x, 50), sf::Vector2f(position.x, position.y + bookCoverSize.y + 20.f), sf::Color::Transparent, L"书名", font, fontSize, fontSize, sf::Color::Black, sf::Color::Blue, []() {}),
-	_isVisible(isVisible)
+	_isVisible(isVisible),
+	_book(NULL)
 {
 
 }
@@ -1205,5 +1206,137 @@ void BooksDisplayInPage::_updateDisplay()
 	}
 	else {
 		_bookDisplay10.setVisiblity(false);
+	}
+}
+
+
+
+Table::Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2) :
+	_view(sf::FloatRect(position, size)),
+	_font(font),
+	_fontSize(fontSize),
+	_headers(std::move(headers)),
+	_headerColor(headerColor),
+	_rowColor1(rowColor1),
+	_rowColor2(rowColor2),
+	_position(position),
+	_rowWidth(std::move(rowWidth))
+{
+	_updateHeaders();
+}
+
+Table::~Table()
+{
+	while (!_headerButtons.empty()) {
+		TextToogleButton* headerButton = _headerButtons.back();
+		delete headerButton;
+		_headerButtons.pop_back();
+	}
+
+	while (!_rowDisplay.empty()) {
+		_row* row = _rowDisplay.back();
+		delete row;
+		_rowDisplay.pop_back();
+	}
+}
+
+void Table::setHeaders(std::vector<std::wstring>&& headers)
+{
+	_headers = std::move(headers);
+	_updateHeaders();
+}
+
+void Table::setRows(std::vector<std::vector<std::wstring>>&& rowsData)
+{
+	_rowsData = std::move(rowsData);
+	_updateRows();
+}
+
+void Table::handleEvent(const sf::Event& event, sf::RenderWindow& window)
+{
+	for (TextToogleButton* headerButton : _headerButtons) {
+		headerButton->handleEvent(event, window);
+	}
+
+	for (_row* row : _rowDisplay) {
+		row->handleEvent(event, window);
+	}
+}
+
+void Table::render(sf::RenderWindow& window)
+{
+	for (TextToogleButton* headerButton : _headerButtons) {
+		headerButton->render(window);
+	}
+
+	for (_row* row : _rowDisplay) {
+		row->render(window);
+	}
+}
+
+Table::_row::_row(sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring> rowData, std::vector<float> rowWidth, sf::Color backgroundColor) :
+	_rowData(rowData),
+	_rowWidth(rowWidth)
+{
+	float positionX = position.x;
+	for (int i = 0; i < _rowData.size(); i++) {
+		TextToogleButton* colomnButton = new TextToogleButton(sf::Vector2f(_rowWidth[i], 50), sf::Vector2f(positionX, position.y), backgroundColor, _rowData[i], font, fontSize, fontSize, sf::Color::Black, sf::Color::Black, [&]() {}, false);
+		_rowButtons.push_back(colomnButton);
+		positionX += _rowWidth[i];
+	}
+}
+
+Table::_row::~_row()
+{
+	while (!_rowButtons.empty()) {
+		TextToogleButton* rowButton = _rowButtons.back();
+		delete rowButton;
+		_rowButtons.pop_back();
+	}
+}
+
+void Table::_row::handleEvent(const sf::Event& event, sf::RenderWindow& window)
+{
+	for (TextToogleButton* rowButton : _rowButtons) {
+		rowButton->handleEvent(event, window);
+	}
+}
+
+void Table::_row::render(sf::RenderWindow& window)
+{
+	for (TextToogleButton* rowButton : _rowButtons) {
+		rowButton->render(window);
+	}
+}
+
+void Table::_updateRows()
+{
+	while (!_rowDisplay.empty()) {
+		_row* row = _rowDisplay.back();
+		delete row;
+		_rowDisplay.pop_back();
+	}
+
+	float positionY = _position.y + 50.f;
+	for (int i = 0; i < _rowsData.size(); i++) {
+		_row* row = new _row(sf::Vector2f(_position.x, positionY), _font, _fontSize, _rowsData[i], _rowWidth, i % 2 == 0 ? _rowColor1 : _rowColor2);
+		_rowDisplay.push_back(row);
+		positionY += 50.f;
+	}
+}
+
+void Table::_updateHeaders()
+{
+	while (!_headerButtons.empty()) {
+		TextToogleButton* headerButton = _headerButtons.back();
+		delete headerButton;
+		_headerButtons.pop_back();
+	}
+
+	float positionX = _position.x;
+	for (int i = 0; i < _headers.size(); i++) {
+		TextToogleButton* headerButton = new TextToogleButton(sf::Vector2f(_rowWidth[i], 50), sf::Vector2f(positionX, _position.y), _headerColor, _headers[i], _font, _fontSize, _fontSize, sf::Color::Black, sf::Color::Black, [&]() {}, false);
+		_headerButtons.push_back(headerButton);
+		positionX += _rowWidth[i];
 	}
 }

@@ -5,7 +5,8 @@
 User::User() :
 	_window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Library Management System", sf::Style::Default),
 	_userType(UserType::Guest),
-	_pageManager(*this)
+	_pageManager(*this),
+	_userId(-1)
 {
 	_window.setPosition(sf::Vector2i((sf::VideoMode::getDesktopMode().width - WINDOW_WIDTH) >> 1, (sf::VideoMode::getDesktopMode().height - WINDOW_HEIGHT) >> 1));
 }
@@ -35,7 +36,59 @@ void User::run()
     }
 }
 
+int User::login(std::string username, std::string password)
+{
+	const char* sql = "SELECT * FROM user_info WHERE username = ?";
+	int rc;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return SQLITE_DATABASE_ERROR;
+	}
 
+	rc = sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_STATIC);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return SQLITE_DATABASE_ERROR;
+	}
+
+	rc = sqlite3_step(stmt);
+	while (rc == SQLITE_ROW) {
+		int delFlg = sqlite3_column_int(stmt, 8);
+		if (!delFlg) {
+			std::string truthPassword = std::string((const char*)sqlite3_column_text(stmt, 11));
+			if (password == truthPassword) {
+				_userId = sqlite3_column_int(stmt, 0);
+				_setUserType(std::string((const char*)sqlite3_column_text(stmt, 4)));
+				sqlite3_finalize(stmt);
+				return LOGIN_SUCESSFUL;
+			}
+			else {
+				sqlite3_finalize(stmt);
+				return WRONG_PASSWORD;
+			}
+		}
+
+		rc = sqlite3_step(stmt);
+	}
+
+	sqlite3_finalize(stmt);
+	return INVALID_USERNAME;
+}
+
+void User::logout()
+{
+	_userType = UserType::Guest;
+	_userId = -1;
+}
+
+UserType User::getUserType()
+{
+	return _userType;
+}
 
 Book User::getBookInfoById(int id)
 {
@@ -45,12 +98,14 @@ Book User::getBookInfoById(int id)
 	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK) {
         std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
-        return Book();
+		sqlite3_finalize(stmt);
+		return Book();
     }
 
 	rc = sqlite3_bind_int(stmt, 1, id);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
 		return Book();
 	}
 
@@ -71,9 +126,11 @@ Book User::getBookInfoById(int id)
 		book.setImgUrl(std::string((const char*)sqlite3_column_text(stmt, 11)));
 		book.setDelFlg(sqlite3_column_int(stmt, 12));
 
+		sqlite3_finalize(stmt);
 		return book;
 	}
 	else {
+		sqlite3_finalize(stmt);
 		return Book();
 	}
 }
@@ -87,6 +144,7 @@ std::vector<Book> User::searchBooksInfo(std::wstring searchWord, const std::wstr
 	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
 		return books;
 	}
 
@@ -103,6 +161,7 @@ std::vector<Book> User::searchBooksInfo(std::wstring searchWord, const std::wstr
 	rc = sqlite3_bind_text(stmt, 3, searchWordStr.c_str(), -1, SQLITE_STATIC);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to search word: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
 		return books;
 	}
 
@@ -117,6 +176,7 @@ std::vector<Book> User::searchBooksInfo(std::wstring searchWord, const std::wstr
 	rc = sqlite3_bind_text(stmt, 4, categoryStr.c_str(), -1, SQLITE_STATIC);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to category: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
 		return books;
 	}
 
@@ -140,10 +200,6 @@ std::vector<Book> User::searchBooksInfo(std::wstring searchWord, const std::wstr
 		books.push_back(book);
 
 		rc = sqlite3_step(stmt);
-	}
-
-	if (rc != SQLITE_DONE) {
-		std::cerr << "Search book by book name failed: " << sqlite3_errmsg(mDatabase) << std::endl;
 	}
 
 	sqlite3_finalize(stmt);
@@ -159,6 +215,7 @@ std::vector<Book> User::searchBooksInfoByName(std::wstring bookName, const std::
 	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
 		return books;
 	}
 
@@ -174,6 +231,7 @@ std::vector<Book> User::searchBooksInfoByName(std::wstring bookName, const std::
 	rc = sqlite3_bind_text(stmt, 1, bookNameStr.c_str(), -1, SQLITE_STATIC);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to book name: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
 		return books;
 	}
 
@@ -188,6 +246,7 @@ std::vector<Book> User::searchBooksInfoByName(std::wstring bookName, const std::
 	rc = sqlite3_bind_text(stmt, 2, categoryStr.c_str(), -1, SQLITE_STATIC);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to category: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
 		return books;
 	}
 
@@ -211,10 +270,6 @@ std::vector<Book> User::searchBooksInfoByName(std::wstring bookName, const std::
 		books.push_back(book);
 
 		rc = sqlite3_step(stmt);
-	}
-
-	if (rc != SQLITE_DONE) {
-		std::cerr << "Search book by book name failed: " << sqlite3_errmsg(mDatabase) << std::endl;
 	}
 	
 	sqlite3_finalize(stmt);
@@ -230,6 +285,7 @@ std::vector<Book> User::searchBooksInfoByAuthor(std::wstring author, const std::
 	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
 		return books;
 	}
 
@@ -245,6 +301,7 @@ std::vector<Book> User::searchBooksInfoByAuthor(std::wstring author, const std::
 	rc = sqlite3_bind_text(stmt, 1, authorStr.c_str(), -1, SQLITE_STATIC);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to author: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
 		return books;
 	}
 
@@ -259,6 +316,7 @@ std::vector<Book> User::searchBooksInfoByAuthor(std::wstring author, const std::
 	rc = sqlite3_bind_text(stmt, 2, categoryStr.c_str(), -1, SQLITE_STATIC);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to category: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
 		return books;
 	}
 
@@ -282,10 +340,6 @@ std::vector<Book> User::searchBooksInfoByAuthor(std::wstring author, const std::
 		books.push_back(book);
 
 		rc = sqlite3_step(stmt);
-	}
-
-	if (rc != SQLITE_DONE) {
-		std::cerr << "Search book by book name failed: " << sqlite3_errmsg(mDatabase) << std::endl;
 	}
 
 	sqlite3_finalize(stmt);
@@ -301,6 +355,7 @@ std::vector<Book> User::searchBooksInfoByPublisher(std::wstring publisher, const
 	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
 		return books;
 	}
 
@@ -316,6 +371,7 @@ std::vector<Book> User::searchBooksInfoByPublisher(std::wstring publisher, const
 	rc = sqlite3_bind_text(stmt, 1, publisherStr.c_str(), -1, SQLITE_STATIC);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to book name: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
 		return books;
 	}
 
@@ -330,6 +386,7 @@ std::vector<Book> User::searchBooksInfoByPublisher(std::wstring publisher, const
 	rc = sqlite3_bind_text(stmt, 2, categoryStr.c_str(), -1, SQLITE_STATIC);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to category: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
 		return books;
 	}
 
@@ -355,10 +412,62 @@ std::vector<Book> User::searchBooksInfoByPublisher(std::wstring publisher, const
 		rc = sqlite3_step(stmt);
 	}
 
-	if (rc != SQLITE_DONE) {
-		std::cerr << "Search book by book name failed: " << sqlite3_errmsg(mDatabase) << std::endl;
+	sqlite3_finalize(stmt);
+	return books;
+}
+
+std::vector<BorrowBookDetail> User::getBorrowedBooks()
+{
+	const char* sql = "SELECT * FROM borrow_info WHERE user_id = ?";
+	int rc;
+	std::vector<BorrowBookDetail> borrowBookDetailList;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return borrowBookDetailList;
+	}
+
+	rc = sqlite3_bind_int(stmt, 1, _userId);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return borrowBookDetailList;
+	}
+
+	rc = sqlite3_step(stmt);
+	while (rc == SQLITE_ROW) {
+		BorrowBookDetail borrowBookDetail;
+		borrowBookDetail.setId(sqlite3_column_int(stmt, 0));
+		borrowBookDetail.setBookId(sqlite3_column_int(stmt, 1));
+		borrowBookDetail.setUserId(sqlite3_column_int(stmt, 2));
+		borrowBookDetail.setBorrowDate(std::string((const char*)sqlite3_column_text16(stmt, 3)));
+		borrowBookDetail.setReturnDate(std::string((const char*)sqlite3_column_text16(stmt, 4)));
+
+		borrowBookDetailList.push_back(borrowBookDetail);
+
+		rc = sqlite3_step(stmt);
 	}
 
 	sqlite3_finalize(stmt);
-	return books;
+	return borrowBookDetailList;
+}
+
+
+
+void User::_setUserType(std::string type)
+{
+	if (type == "Student") {
+		_userType = UserType::Student;
+	}
+	else if (type == "Teacher") {
+		_userType = UserType::Teacher;
+	}
+	else if (type == "Admin") {
+		_userType = UserType::Admin;
+	}
+	else if (type == "Guest") {
+		_userType = UserType::Guest;
+	}
 }
