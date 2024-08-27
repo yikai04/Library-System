@@ -110,6 +110,11 @@ void Button::setSize(const sf::Vector2f& size)
 	_setTextPos();
 }
 
+void Button::setOnClickHandler(std::function<void()> onClickHandler)
+{
+	_onClickHandler = onClickHandler;
+}
+
 sf::Vector2f Button::getSize()
 {
 	return _size;
@@ -455,6 +460,25 @@ TextBox::~TextBox()
 
 }
 
+void TextBox::setText(std::wstring text)
+{
+	_inputString = text;
+	if (!_isPassword) {
+		_inputText.setString(_inputString);
+	}
+	else {
+		_inputText.setString("");
+		for (int i = 0; i < _inputString.size(); i++) {
+			_inputText.setString(_inputText.getString() + "*");
+		}
+	}
+}
+
+std::wstring TextBox::getText()
+{
+	return _inputString;
+}
+
 void TextBox::handleEvent(const sf::Event& event, sf::RenderWindow& window) {
 	if (_textBox.getGlobalBounds().contains(static_cast<sf::Vector2f>(sf::Mouse::getPosition(window)))) {
 		if (_cursor.loadFromSystem(sf::Cursor::Text)) {
@@ -751,7 +775,7 @@ std::wstring SearchBar::getFilter()
 
 std::wstring SearchBar::getSearchWord()
 {
-	return _inputString;
+	return TextBox::getText();
 }
 
 bool SearchBar::getDropDownVisibility()
@@ -1211,7 +1235,7 @@ void BooksDisplayInPage::_updateDisplay()
 
 
 
-Table::Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2) :
+Table::Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, const float& rowHeight, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2) :
 	_view(sf::FloatRect(position, size)),
 	_font(font),
 	_fontSize(fontSize),
@@ -1220,7 +1244,8 @@ Table::Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, con
 	_rowColor1(rowColor1),
 	_rowColor2(rowColor2),
 	_position(position),
-	_rowWidth(std::move(rowWidth))
+	_rowWidth(std::move(rowWidth)),
+	_rowHeight(rowHeight)
 {
 	_updateHeaders();
 }
@@ -1246,9 +1271,10 @@ void Table::setHeaders(std::vector<std::wstring>&& headers)
 	_updateHeaders();
 }
 
-void Table::setRows(std::vector<std::vector<std::wstring>>&& rowsData)
+void Table::setRows(std::vector<std::vector<std::wstring>>&& rowsData, std::vector<Book>&& books)
 {
 	_rowsData = std::move(rowsData);
+	_books = std::move(books);
 	_updateRows();
 }
 
@@ -1274,13 +1300,14 @@ void Table::render(sf::RenderWindow& window)
 	}
 }
 
-Table::_row::_row(sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring> rowData, std::vector<float> rowWidth, sf::Color backgroundColor) :
+Table::_row::_row(sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring> rowData, std::vector<float> rowWidth, float rowHeight, sf::Color backgroundColor) :
 	_rowData(rowData),
-	_rowWidth(rowWidth)
+	_rowWidth(rowWidth),
+	_rowHeight(rowHeight)
 {
 	float positionX = position.x;
 	for (int i = 0; i < _rowData.size(); i++) {
-		TextToogleButton* colomnButton = new TextToogleButton(sf::Vector2f(_rowWidth[i], 50), sf::Vector2f(positionX, position.y), backgroundColor, _rowData[i], font, fontSize, fontSize, sf::Color::Black, sf::Color::Black, [&]() {}, false);
+		TextToogleButton* colomnButton = new TextToogleButton(sf::Vector2f(_rowWidth[i], _rowHeight), sf::Vector2f(positionX, position.y), backgroundColor, _rowData[i], font, fontSize, fontSize, sf::Color::Black, sf::Color::Black, [&]() {}, false);
 		_rowButtons.push_back(colomnButton);
 		positionX += _rowWidth[i];
 	}
@@ -1317,11 +1344,11 @@ void Table::_updateRows()
 		_rowDisplay.pop_back();
 	}
 
-	float positionY = _position.y + 50.f;
+	float positionY = _position.y + _rowHeight;
 	for (int i = 0; i < _rowsData.size(); i++) {
-		_row* row = new _row(sf::Vector2f(_position.x, positionY), _font, _fontSize, _rowsData[i], _rowWidth, i % 2 == 0 ? _rowColor1 : _rowColor2);
+		_row* row = new _row(sf::Vector2f(_position.x, positionY), _font, _fontSize, _rowsData[i], _rowWidth, _rowHeight, i % 2 == 0 ? _rowColor1 : _rowColor2);
 		_rowDisplay.push_back(row);
-		positionY += 50.f;
+		positionY += _rowHeight;
 	}
 }
 
@@ -1335,7 +1362,7 @@ void Table::_updateHeaders()
 
 	float positionX = _position.x;
 	for (int i = 0; i < _headers.size(); i++) {
-		TextToogleButton* headerButton = new TextToogleButton(sf::Vector2f(_rowWidth[i], 50), sf::Vector2f(positionX, _position.y), _headerColor, _headers[i], _font, _fontSize, _fontSize, sf::Color::Black, sf::Color::Black, [&]() {}, false);
+		TextToogleButton* headerButton = new TextToogleButton(sf::Vector2f(_rowWidth[i], _rowHeight), sf::Vector2f(positionX, _position.y), _headerColor, _headers[i], _font, _fontSize, _fontSize, sf::Color::Black, sf::Color::Black, [&]() {}, false);
 		_headerButtons.push_back(headerButton);
 		positionX += _rowWidth[i];
 	}

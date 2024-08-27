@@ -1,4 +1,4 @@
-#include "PageBase.hpp"
+﻿#include "PageBase.hpp"
 
 PageBase::PageBase(User& user, PageManager& pageManager):
 	_user(user),

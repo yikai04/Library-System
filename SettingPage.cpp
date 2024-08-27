@@ -12,7 +12,6 @@ SettingPage::SettingPage(User& user, PageManager& pageManager) :
 	_topBarButton5(sf::Vector2f(150, 70), sf::Vector2f(1480, 80), sf::Color::Transparent, L"用户设置", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Setting); }),
 	_topBarButton6(sf::Vector2f(100, 70), sf::Vector2f(1680, 80), sf::Color::Transparent, L"登录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Login); })
 
-
 {
 	_backgroundTexture.loadFromFile("Image/Background(1920x1080).png");
 
@@ -57,4 +56,20 @@ void SettingPage::render(sf::RenderWindow& window)
 
 
 	//window.display() called in main.cpp
+}
+
+void SettingPage::onEnter()
+{
+	if (_user.getUserType() != UserType::Guest) {
+		_topBarButton6.setText(L"登出");
+		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
+	}
+}
+
+void SettingPage::_logoutHandler()
+{
+	_user.logout();
+	_topBarButton6.setText(L"登录");
+	_topBarButton6.setOnClickHandler([&]() {_pageManager.setPage(Page::Login); });
+	_pageManager.setPage(Page::Login);
 }

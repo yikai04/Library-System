@@ -12,7 +12,7 @@ RecordsPage::RecordsPage(User& user, PageManager& pageManager) :
 	_topBarButton5(sf::Vector2f(150, 70), sf::Vector2f(1480, 80), sf::Color::Transparent, L"用户设置", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Setting); }),
 	_topBarButton6(sf::Vector2f(100, 70), sf::Vector2f(1680, 80), sf::Color::Transparent, L"登录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Login); }),
 
-	_table(sf::Vector2f(1000,600), sf::Vector2f(300,200), _font, 20, {L"序号", L"书名", L"借书日期", L"归还日期", L"备注"}, {200.f, 200.f, 200.f, 200.f, 200.f}, sf::Color::Cyan, sf::Color::White, sf::Color::Magenta)
+	_table(sf::Vector2f(1650,600), sf::Vector2f(130,200), _font, 30, {L"序号", L"书名", L"借书日期", L"归还日期", L"备注"}, {150.f, 600.f, 250.f, 250.f, 400.f}, 100.f, sf::Color::Cyan, sf::Color::White, sf::Color::Magenta)
 {
 	_backgroundTexture.loadFromFile("Image/Background(1920x1080).png");
 
@@ -20,7 +20,8 @@ RecordsPage::RecordsPage(User& user, PageManager& pageManager) :
 	_sprite.setPosition(0, 0);
 	_sprite.setTexture(_backgroundTexture);
 
-	_table.setRows({ { L"1", L"书名1", L"2020-01-01", L"2020-01-02", L"备注1" }, { L"2", L"书名2", L"2020-01-01", L"2020-01-02", L"备注2" }, { L"3", L"书名3", L"2020-01-01", L"2020-01-02", L"备注3" } });
+	//_table.setRows({ { L"1", L"书名1", L"2020-01-01", L"2020-01-02", L"备注1" }, { L"2", L"书名2", L"2020-01-01", L"2020-01-02", L"备注2" }, { L"3", L"书名3", L"2020-01-01", L"2020-01-02", L"备注3" } });
+	
 }
 
 RecordsPage::~RecordsPage()
@@ -59,4 +60,46 @@ void RecordsPage::render(sf::RenderWindow& window)
 
 	_table.render(window);
 	//window.display() called in main.cpp
+}
+
+void RecordsPage::onEnter()
+{
+	_showBorrowRecords();
+
+	if (_user.getUserType() != UserType::Guest) {
+		_topBarButton6.setText(L"登出");
+		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
+	}
+}
+
+void RecordsPage::_showBorrowRecords()
+{
+	if (_user.getUserType() == UserType::Admin) {
+		//show all records
+	}
+	else if (_user.getUserType() == UserType::Student || _user.getUserType() == UserType::Teacher) {
+		//show records of current user
+		std::vector<BorrowBookDetail> borrowBookDetailList = _user.getBorrowedBooks();
+		std::vector<std::vector<std::wstring>> rows;
+		std::vector<Book> books;
+
+		for (int i = 0; i < borrowBookDetailList.size(); i++) {
+			Book book = _user.getBookInfoById(borrowBookDetailList[i].getBookId());
+			rows.push_back({ std::to_wstring(i + 1), book.getBookName(), borrowBookDetailList[i].getBorrowDate().getWDate(), borrowBookDetailList[i].getReturnDate().getWDate(), L""});
+			books.push_back(book);
+		}
+		_table.setRows(std::move(rows), std::move(books));
+	}
+	else {
+		//show nothing
+		_pageManager.setPage(Page::Login);
+	}
+}
+
+void RecordsPage::_logoutHandler()
+{
+	_user.logout();
+	_topBarButton6.setText(L"登录");
+	_topBarButton6.setOnClickHandler([&]() {_pageManager.setPage(Page::Login); });
+	_pageManager.setPage(Page::Login);
 }

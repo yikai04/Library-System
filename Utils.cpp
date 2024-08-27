@@ -2,9 +2,10 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <chrono>
+#include <chrono> //Time
 #include <ctime>
 #include <Windows.h>
+#include <regex> //Regular Expression
 
 sqlite3* mDatabase;
 
@@ -133,12 +134,18 @@ Date::~Date()
 
 void Date::setDate(std::string date)
 {
-	_stringToDate(date);
+	std::regex datePattern("\\d{4}-\\d{2}-\\d{2}");
+	if (std::regex_match(date, datePattern)) {
+		_stringToDate(date);
+	}
 }
 
 void Date::setDate(std::wstring date)
 {
-	_stringToDate(date);
+	std::regex datePattern("\\d{4}-\\d{2}-\\d{2}");
+	if (std::regex_match(wstring_to_string(date), datePattern)) {
+		_stringToDate(date);
+	}
 }
 
 void Date::setTodatyDate()
@@ -156,6 +163,11 @@ void Date::setTodatyDate()
 std::string Date::getDate()
 {
 	return _dateToString();
+}
+
+std::wstring Date::getWDate()
+{
+	return _dateToWString();
 }
 
 int Date::getYear()
@@ -189,6 +201,22 @@ void Date::_stringToDate(std::wstring date)
 
 std::string Date::_dateToString()
 {
-	std::string date = std::to_string(_year) + "-" + std::to_string(_month) + "-" + std::to_string(_day);
+	if (_year == -1 || _month == -1 || _day == -1)
+	{
+		return "NULL";
+	}
+
+	std::string date = std::format("{:04}", _year) + "-" + std::format("{:02}", _month) + "-" + std::format("{:02}", _day);	
+	return date;
+}
+
+std::wstring Date::_dateToWString()
+{
+	if (_year == -1 || _month == -1 || _day == -1)
+	{
+		return L"NULL";
+	}
+
+	std::wstring date = std::format(L"{:04}", _year) + L"-" + std::format(L"{:02}", _month) + L"-" + std::format(L"{:02}", _day);
 	return date;
 }

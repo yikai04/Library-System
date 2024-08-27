@@ -27,6 +27,9 @@ PageManager::~PageManager()
 void PageManager::setPage(Page newPage)
 {
     currentPage = newPage;
+	if (pages[currentPage]) {
+		pages[currentPage]->onEnter();
+	}
 }
 
 void PageManager::handleEvent(const sf::Event& event, sf::RenderWindow& window)

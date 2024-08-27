@@ -36,7 +36,7 @@ void User::run()
     }
 }
 
-int User::login(std::string username, std::string password)
+int User::login(std::wstring username, std::wstring password)
 {
 	const char* sql = "SELECT * FROM user_info WHERE username = ?";
 	int rc;
@@ -48,7 +48,8 @@ int User::login(std::string username, std::string password)
 		return SQLITE_DATABASE_ERROR;
 	}
 
-	rc = sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_STATIC);
+	std::string usernameStr = wstring_to_string(username);
+	rc = sqlite3_bind_text(stmt, 1, usernameStr.c_str(), -1, SQLITE_STATIC);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
 		sqlite3_finalize(stmt);
@@ -59,7 +60,7 @@ int User::login(std::string username, std::string password)
 	while (rc == SQLITE_ROW) {
 		int delFlg = sqlite3_column_int(stmt, 8);
 		if (!delFlg) {
-			std::string truthPassword = std::string((const char*)sqlite3_column_text(stmt, 11));
+			std::wstring truthPassword = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 3));
 			if (password == truthPassword) {
 				_userId = sqlite3_column_int(stmt, 0);
 				_setUserType(std::string((const char*)sqlite3_column_text(stmt, 4)));
@@ -442,8 +443,8 @@ std::vector<BorrowBookDetail> User::getBorrowedBooks()
 		borrowBookDetail.setId(sqlite3_column_int(stmt, 0));
 		borrowBookDetail.setBookId(sqlite3_column_int(stmt, 1));
 		borrowBookDetail.setUserId(sqlite3_column_int(stmt, 2));
-		borrowBookDetail.setBorrowDate(std::string((const char*)sqlite3_column_text16(stmt, 3)));
-		borrowBookDetail.setReturnDate(std::string((const char*)sqlite3_column_text16(stmt, 4)));
+		borrowBookDetail.setBorrowDate(std::string((const char*)sqlite3_column_text(stmt, 3)));
+		borrowBookDetail.setReturnDate(std::string((const char*)sqlite3_column_text(stmt, 4)));
 
 		borrowBookDetailList.push_back(borrowBookDetail);
 
@@ -470,4 +471,9 @@ void User::_setUserType(std::string type)
 	else if (type == "Guest") {
 		_userType = UserType::Guest;
 	}
+}
+
+void User::setUserDetail()
+{
+
 }

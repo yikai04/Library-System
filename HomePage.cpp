@@ -63,3 +63,19 @@ void HomePage::render(sf::RenderWindow& window)
 
     //window.display() called in main.cpp
 }
+
+void HomePage::onEnter()
+{
+    if (_user.getUserType() != UserType::Guest) {
+		_topBarButton6.setText(L"登出");
+        _topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
+    }
+}
+
+void HomePage::_logoutHandler()
+{
+    _user.logout();
+    _topBarButton6.setText(L"登录");
+    _topBarButton6.setOnClickHandler([&]() {_pageManager.setPage(Page::Login); });
+    _pageManager.setPage(Page::Login);
+}

@@ -22,6 +22,7 @@ class Button
 		void setText(const std::wstring& text);
 		void setPosition(const sf::Vector2f& position);
 		void setSize(const sf::Vector2f& size);
+		void setOnClickHandler(std::function<void()> onClickHandler);
 		sf::Vector2f getSize();
 		sf::Vector2f getPosition();
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
@@ -99,6 +100,8 @@ class TextBox
 public:
 	TextBox(float width, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText = L"输入框", const sf::Color& backgroundColor = sf::Color::White, bool isPassword = false);
 	~TextBox();
+	void setText(std::wstring text);
+	std::wstring getText();
 	void handleEvent(const sf::Event& event, sf::RenderWindow& window);
 	void update(sf::Time dt);
 	void render(sf::RenderWindow& window);
@@ -272,17 +275,17 @@ class BooksDisplayInPage
 class Table
 {
 public:
-	Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2);
+	Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, const float& rowHeight, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2);
 	~Table();
 	void setHeaders(std::vector<std::wstring>&& headers);
-	void setRows(std::vector<std::vector<std::wstring>>&& rows);
+	void setRows(std::vector<std::vector<std::wstring>>&& rows, std::vector<Book>&& books);
 	void handleEvent(const sf::Event& event, sf::RenderWindow& window);
 	void render(sf::RenderWindow& window);
 
 protected:
 	class _row {
 		public:
-			_row(sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring> rowData, std::vector<float> rowWidth, sf::Color backgroundColor);
+			_row(sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring> rowData, std::vector<float> rowWidth, float rowHeight, sf::Color backgroundColor);
 			~_row();
 			void handleEvent(const sf::Event& event, sf::RenderWindow& window);
 			void render(sf::RenderWindow& window);
@@ -291,14 +294,17 @@ protected:
 			std::vector<TextToogleButton*> _rowButtons;
 			std::vector<std::wstring> _rowData;
 			std::vector<float> _rowWidth;
+			float _rowHeight;
 	};
 	void _updateRows();
 	void _updateHeaders();
 	std::vector<std::vector<std::wstring>> _rowsData;
+	std::vector<Book> _books;
 	std::vector<std::wstring> _headers;
 	std::vector<TextToogleButton*> _headerButtons;
 	std::vector<_row*> _rowDisplay;
 	std::vector<float> _rowWidth;
+	float _rowHeight;
 	sf::View _view;
 	sf::Font _font;
 	sf::Color _headerColor;

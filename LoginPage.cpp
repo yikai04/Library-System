@@ -3,6 +3,7 @@
 
 LoginPage::LoginPage(User& user, PageManager& pageManager) :
     PageBase(user, pageManager),
+
     _topBarButton1(sf::Vector2f(100, 70), sf::Vector2f(720, 80), sf::Color::Transparent, L"首页", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Home); }),
     _topBarButton2(sf::Vector2f(100, 70), sf::Vector2f(870, 80), sf::Color::Transparent, L"书架", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Search); }),
     _topBarButton3(sf::Vector2f(150, 70), sf::Vector2f(1020, 80), sf::Color::Transparent, L"借阅记录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Records); }),
@@ -12,7 +13,7 @@ LoginPage::LoginPage(User& user, PageManager& pageManager) :
 
     _username(550.f, sf::Vector2f(660, 500), _font, 35, L"用户名", sf::Color::Transparent,false),
 	_password(550.f, sf::Vector2f(660, 625), _font, 35, L"密码", sf::Color::Transparent, true),
-	_loginButton(sf::Vector2f(600, 70), sf::Vector2f(630, 755), [&]() {_pageManager.setPage(Page::Home); }, sf::Color::Transparent)
+	_loginButton(sf::Vector2f(600, 70), sf::Vector2f(630, 755), [&]() {_loginHandler(); }, sf::Color::Transparent)
 
 {
     _backgroundTexture.loadFromFile("Image/LoginPage.png");
@@ -63,4 +64,40 @@ void LoginPage::render(sf::RenderWindow& window)
 	_password.render(window);
 	_loginButton.render(window);
     //window.display() called in main.cpp
+}
+
+void LoginPage::onEnter()
+{
+    _username.setText(L"");
+    _password.setText(L"");
+}
+
+void LoginPage::_loginHandler()
+{
+	int status = _user.login(_username.getText(), _password.getText());
+    
+    if (status == LOGIN_SUCESSFUL) {
+        _topBarButton6.setText(L"登出");
+        _topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
+        _pageManager.setPage(Page::Home);
+        return;
+    }
+	else if (status == WRONG_PASSWORD) {
+        _password.setText(L"");
+    }
+    else if (status == INVALID_USERNAME) {
+        _username.setText(L"");
+        _password.setText(L"");
+    }
+    else {
+
+    }
+}
+
+void LoginPage::_logoutHandler()
+{
+    _user.logout();
+    _topBarButton6.setText(L"登录");
+    _topBarButton6.setOnClickHandler([&]() {_pageManager.setPage(Page::Login); });
+    _pageManager.setPage(Page::Login);
 }

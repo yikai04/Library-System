@@ -43,8 +43,8 @@ constexpr const char* CREATE_BORROW_INFO_TABLE_SQLCMD = "CREATE TABLE IF NOT EXI
 														`id` INT(11) NOT NULL , \
 														`book_id` INT(11) DEFAULT NULL , \
 														`user_id` INT(11) DEFAULT NULL , \
-														`borrow_date` date DEFAULT NULL , \
-														`return_date` date DEFAULT NULL , \
+														`borrow_date` varchar(10) DEFAULT NULL , \
+														`return_date` varchar(10) DEFAULT NULL , \
 														PRIMARY KEY(`id`) \
 														);";
 
@@ -70,6 +70,7 @@ class Date
 		void setDate(std::wstring date);
 		void setTodatyDate();
 		std::string getDate();
+		std::wstring getWDate();
 		int getYear();
 		int getMonth();
 		int getDay();
@@ -78,6 +79,7 @@ class Date
 		void _stringToDate(std::string date);
 		void _stringToDate(std::wstring date);
 		std::string _dateToString();
+		std::wstring _dateToWString();
 		int _year;
 		int _month;
 		int _day;
