@@ -14,6 +14,8 @@ class SettingPage : public PageBase
 
     protected:
         void _logoutHandler();
+        void _showUserInfo();
+		//bool _updateUserInfo();
 
     private:
         sf::Texture _backgroundTexture;
@@ -26,4 +28,8 @@ class SettingPage : public PageBase
         TextToogleButton _topBarButton5;
         TextToogleButton _topBarButton6;
 
+        TextDisplay _name;
+		TextDisplay _email;
+        DropDown _gender;
+        TextDisplay _registerDate;
 };

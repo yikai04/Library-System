@@ -24,11 +24,13 @@ class PageManager
         PageManager(User& user);
         ~PageManager();
         void setPage(Page newPage);
+        Page getLastPage();
         void handleEvent(const sf::Event& event, sf::RenderWindow& window);
         void update(sf::Time dt);
         void render(sf::RenderWindow& window);
 
     private:
         Page currentPage;
+        Page lastPage;
         std::unordered_map<Page, std::unique_ptr<PageBase>> pages;
 };

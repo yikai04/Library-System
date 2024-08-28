@@ -8,7 +8,8 @@
 
 
 PageManager::PageManager(User& user):
-    currentPage(Page::Home)
+    currentPage(Page::Home),
+	lastPage(Page::Home)
 {
     // Initialize the pages
     pages[Page::Home] = std::make_unique<HomePage>(user,*this);
@@ -26,10 +27,16 @@ PageManager::~PageManager()
 
 void PageManager::setPage(Page newPage)
 {
+	lastPage = currentPage;
     currentPage = newPage;
 	if (pages[currentPage]) {
 		pages[currentPage]->onEnter();
 	}
+}
+
+Page PageManager::getLastPage()
+{
+	return lastPage;
 }
 
 void PageManager::handleEvent(const sf::Event& event, sf::RenderWindow& window)

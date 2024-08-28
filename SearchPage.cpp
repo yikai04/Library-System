@@ -74,6 +74,8 @@ void SearchPage::onEnter()
 		_topBarButton6.setText(L"登出");
 		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
 	}
+
+	_searchBar.setText(L"");
 }
 
 void SearchPage::_searchBarHandler()

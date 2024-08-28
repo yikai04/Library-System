@@ -77,9 +77,10 @@ void LoginPage::_loginHandler()
 	int status = _user.login(_username.getText(), _password.getText());
     
     if (status == LOGIN_SUCESSFUL) {
-        _topBarButton6.setText(L"登出");
-        _topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
-        _pageManager.setPage(Page::Home);
+		if (_pageManager.getLastPage() != Page::Login)
+			_pageManager.setPage(_pageManager.getLastPage());
+		else
+			_pageManager.setPage(Page::Home);
         return;
     }
 	else if (status == WRONG_PASSWORD) {

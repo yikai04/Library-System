@@ -21,6 +21,10 @@ class User
 		int login(std::wstring username, std::wstring password);
 		void logout();
 		UserType getUserType();
+		std::wstring getName();
+		Date getRegisterDate();
+		std::wstring getEmail();
+		std::wstring getGender();
 		//void registerAccount(std::wstring username, std::wstring password);
 		//void deleteAccount();
 		//void changeUsername(std::wstring newUsername);
@@ -43,7 +47,7 @@ class User
 
 	private:
 		void _setUserType(std::string type);
-		void setUserDetail();
+		void _setUserDetail();
 		sf::RenderWindow _window;
 		sf::Clock _clock;
 		UserType _userType;
@@ -53,5 +57,5 @@ class User
 		std::wstring _name;
 		Date _registerDate;
 		std::wstring _email;
-		char _gender;
+		std::wstring _gender;
 };

@@ -427,7 +427,7 @@ void IconButton::_resizeIcon()
 
 
 TextBox::TextBox(float width, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText, const sf::Color& backgroundColor, bool isPassword) :
-	_caretVisible(true),
+	_caretVisible(false),
 	_caretTimer(sf::Time::Zero),
 	_caretPosition(0),
 	_isActivated(false),
@@ -468,7 +468,7 @@ TextBox::TextBox(float width, sf::Vector2f position, const sf::Font& font, const
 }
 
 TextBox::TextBox(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText, const sf::Color& backgroundColor) :
-	_caretVisible(true),
+	_caretVisible(false),
 	_caretTimer(sf::Time::Zero),
 	_caretPosition(0),
 	_isActivated(false),
@@ -749,10 +749,10 @@ void TextBox::_setCaretPosition(sf::Vector2i mousePosition)
 
 TextDisplay::TextDisplay(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring text, bool isEditable, std::function<void()> editHandler) :
 	_textBox(size, position, font, fontSize),
-	_editButton(sf::Vector2f(50.f, 50.f), sf::Vector2f(position.x + size.x, position.y), "Icon/editIcon.png"),
+	_editButton(sf::Vector2f(50.f, 50.f), sf::Vector2f(position.x + size.x, position.y), "Icon/editIcon.png", [&]() {_editButtonOnClickHandler(); }),
 	_isEditable(isEditable),
 	_isEditing(false),
-	_editHandler(_editHandler)
+	_editHandler(editHandler)
 {
 	_textBox.setText(text);
 }
@@ -800,7 +800,7 @@ void TextDisplay::render(sf::RenderWindow& window)
 void TextDisplay::_editButtonOnClickHandler()
 {
 	_isEditing = true;
-	_editButton.setIcon("Icon/tickIcon.png");
+	_editButton.setIcon("Icon/tickIcon.jpg");
 	_editButton.setOnClickHandler([&]() {_tickButtonOnClickHandler(); });
 }
 
@@ -809,6 +809,7 @@ void TextDisplay::_tickButtonOnClickHandler()
 	_isEditing = false;
 	_editButton.setIcon("Icon/editIcon.png");
 	_editButton.setOnClickHandler([&]() {_editButtonOnClickHandler(); });
+
 	_editHandler();
 }
 

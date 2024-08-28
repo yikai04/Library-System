@@ -65,6 +65,8 @@ int User::login(std::wstring username, std::wstring password)
 				_userId = sqlite3_column_int(stmt, 0);
 				_setUserType(std::string((const char*)sqlite3_column_text(stmt, 4)));
 				sqlite3_finalize(stmt);
+
+				_setUserDetail();
 				return LOGIN_SUCESSFUL;
 			}
 			else {
@@ -89,6 +91,26 @@ void User::logout()
 UserType User::getUserType()
 {
 	return _userType;
+}
+
+std::wstring User::getName()
+{
+	return _name;
+}
+
+Date User::getRegisterDate()
+{
+	return _registerDate;
+}
+
+std::wstring User::getEmail()
+{
+	return _email;
+}
+
+std::wstring User::getGender()
+{
+	return _gender;
 }
 
 Book User::getBookInfoById(int id)
@@ -473,7 +495,7 @@ void User::_setUserType(std::string type)
 	}
 }
 
-void User::setUserDetail()
+void User::_setUserDetail()
 {
 	const char* sql = "SELECT * FROM user_info WHERE id = ?";
 	int rc;
@@ -496,7 +518,7 @@ void User::setUserDetail()
 	if (rc == SQLITE_ROW) {
 		_name = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 1));
 		_registerDate = Date(std::string((const char*)sqlite3_column_text(stmt, 5)));
-		_gender = static_cast<char>(sqlite3_column_text(stmt, 6)[0]);
+		_gender = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 6));
 		_email = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 7));
 	}
 }
