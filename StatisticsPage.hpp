@@ -26,5 +26,5 @@ class StatisticsPage : public PageBase
         TextToogleButton _topBarButton5;
         TextToogleButton _topBarButton6;
 
-
+        TextBox _textBox;
 };

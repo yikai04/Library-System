@@ -475,5 +475,28 @@ void User::_setUserType(std::string type)
 
 void User::setUserDetail()
 {
+	const char* sql = "SELECT * FROM user_info WHERE id = ?";
+	int rc;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return;
+	}
 
+	rc = sqlite3_bind_int(stmt, 1, _userId);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return;
+	}
+
+	rc = sqlite3_step(stmt);
+	if (rc == SQLITE_ROW) {
+		_name = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 1));
+		_registerDate = Date(std::string((const char*)sqlite3_column_text(stmt, 5)));
+		_gender = static_cast<char>(sqlite3_column_text(stmt, 6)[0]);
+		_email = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 7));
+	}
 }

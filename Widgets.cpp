@@ -432,8 +432,12 @@ TextBox::TextBox(float width, sf::Vector2f position, const sf::Font& font, const
 	_caretPosition(0),
 	_isActivated(false),
 	_cursorType(sf::Cursor::Arrow),
-	_isPassword(isPassword)
+	_isPassword(isPassword),
+	_isMultiLine(false),
+	_lineCount(0)
 {
+	_lineLength.push_back(0);
+
 	_textBox.setFillColor(backgroundColor);
 	_textBox.setPosition(position);
 
@@ -441,6 +445,12 @@ TextBox::TextBox(float width, sf::Vector2f position, const sf::Font& font, const
 	_inputText.setCharacterSize(fontSize);
 	_inputText.setFillColor(sf::Color::Black);
 	_inputText.setPosition(_textBox.getPosition().x + 10.f, _textBox.getPosition().y + 5.f);
+
+	_inputTextLenCounter.setFont(font);
+	_inputTextLenCounter.setCharacterSize(fontSize);
+	_inputTextLenCounter.setFillColor(sf::Color::Transparent);
+	_inputTextLenCounter.setString(L"我");
+	_singleWordHeight = _inputTextLenCounter.getGlobalBounds().height;
 
 	_placeHolderText.setFont(font);
 	_placeHolderText.setCharacterSize(fontSize);
@@ -452,6 +462,48 @@ TextBox::TextBox(float width, sf::Vector2f position, const sf::Font& font, const
 
 	_caret.setSize(sf::Vector2f(2.f, _placeHolderText.getGlobalBounds().height));
 	_caret.setFillColor(sf::Color::Black);
+	
+	_displayString();
+	_updateCaretPosition();
+}
+
+TextBox::TextBox(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText, const sf::Color& backgroundColor) :
+	_caretVisible(true),
+	_caretTimer(sf::Time::Zero),
+	_caretPosition(0),
+	_isActivated(false),
+	_cursorType(sf::Cursor::Arrow),
+	_isPassword(false),
+	_isMultiLine(true),
+	_lineCount(0)
+{
+	_lineLength.push_back(0);
+
+	_textBox.setFillColor(backgroundColor);
+	_textBox.setPosition(position);
+	_textBox.setSize(size);
+
+	_inputText.setFont(font);
+	_inputText.setCharacterSize(fontSize);
+	_inputText.setFillColor(sf::Color::Black);
+	_inputText.setPosition(_textBox.getPosition().x + 10.f, _textBox.getPosition().y + 5.f);
+
+	_inputTextLenCounter.setFont(font);
+	_inputTextLenCounter.setCharacterSize(fontSize);
+	_inputTextLenCounter.setFillColor(sf::Color::Transparent);
+	_inputTextLenCounter.setString(L"我");
+	_singleWordHeight = _inputTextLenCounter.getGlobalBounds().height;
+
+	_placeHolderText.setFont(font);
+	_placeHolderText.setCharacterSize(fontSize);
+	_placeHolderText.setFillColor(sf::Color(150, 150, 150));
+	_placeHolderText.setString(placeHolderText);
+	_placeHolderText.setPosition(_inputText.getPosition());
+
+	_caret.setSize(sf::Vector2f(2.f, _placeHolderText.getGlobalBounds().height));
+	_caret.setFillColor(sf::Color::Black);
+
+	_displayString();
 	_updateCaretPosition();
 }
 
@@ -463,15 +515,7 @@ TextBox::~TextBox()
 void TextBox::setText(std::wstring text)
 {
 	_inputString = text;
-	if (!_isPassword) {
-		_inputText.setString(_inputString);
-	}
-	else {
-		_inputText.setString("");
-		for (int i = 0; i < _inputString.size(); i++) {
-			_inputText.setString(_inputText.getString() + "*");
-		}
-	}
+	_displayString();
 }
 
 std::wstring TextBox::getText()
@@ -506,18 +550,20 @@ void TextBox::handleEvent(const sf::Event& event, sf::RenderWindow& window) {
 
 	if (_isActivated) {
 		if (event.type == sf::Event::TextEntered) {
-			if (event.text.unicode == '\b') {
+			if (event.text.unicode == '\b' && _caretPosition != _inputString.size()) {
 				if (!_inputString.empty()) {
 					_inputString.erase(_inputString.end() - _caretPosition - 1);
 				}
 			}
 			else if (event.text.unicode != '\b') {
-				if (_inputText.getGlobalBounds().width < _textBox.getSize().x - 40.f) {
-					if (_caretPosition == 0) {
-						_inputString += event.text.unicode;
-					}
-					else {
-						_inputString.insert(_inputString.end() - _caretPosition, event.text.unicode);
+				if (_inputText.getGlobalBounds().width < _textBox.getSize().x - 40.f || _isMultiLine) {
+					if (!_isMultiLine || _inputText.getGlobalBounds().height < _textBox.getSize().y - 20.f || _inputText.getGlobalBounds().width < _textBox.getSize().x - 40.f) {
+						if (_caretPosition == 0) {
+							_inputString += event.text.unicode;
+						}
+						else {
+							_inputString.insert(_inputString.end() - _caretPosition, event.text.unicode);
+						}
 					}
 				}
 				else {
@@ -525,28 +571,23 @@ void TextBox::handleEvent(const sf::Event& event, sf::RenderWindow& window) {
 				}
 			}
 		}
-		if (!_isPassword) {
-			_inputText.setString(_inputString);
-		}
-		else {
-			_inputText.setString("");
-			for (int i = 0; i < _inputString.size(); i++) {
-				_inputText.setString(_inputText.getString() + "*");
-			}
-		}
+		_displayString();
 
 		if (event.type == sf::Event::KeyPressed) {
 			if (event.key.code == sf::Keyboard::Left) {
-				if (_caretPosition < _inputString.size())
+				if (_caretPosition < _inputString.size()) {
 					_caretPosition++;
+				}
 			}
 			else if (event.key.code == sf::Keyboard::Right) {
-				if (_caretPosition > 0)
+				if (_caretPosition > 0) {
 					_caretPosition--;
+				}
 			}
 			else if (event.key.code == sf::Keyboard::Delete) {
 				if (_caretPosition != 0 && _inputString.size() != 0) {
 					_inputString.erase(_inputString.end() - _caretPosition);
+					_displayString();
 					_caretPosition--;
 				}
 			}
@@ -583,23 +624,100 @@ void TextBox::render(sf::RenderWindow& window) {
 	}
 }
 
+void TextBox::_displayString()
+{
+	if (!_isPassword) {
+		if (!_isMultiLine) {
+			_inputText.setString(_inputString);
+			_inputTextLenCounter.setString(_inputString);
+		}
+		else {
+			_inputText.setString("");
+			_inputTextLenCounter.setString("");
+			_lineLength.clear();
+			_lineLength.push_back(0);
+			int lineLengthIndex = 0;
+			for (int i = 0; i < _inputString.size(); i++) {
+				_inputText.setString(_inputText.getString() + _inputString[i]);
+				_inputTextLenCounter.setString(_inputTextLenCounter.getString() + _inputString[i]);
+				_lineLength[lineLengthIndex]++;
+				if (_inputTextLenCounter.getGlobalBounds().width > _textBox.getSize().x - 30.f) {
+					_inputText.setString(_inputText.getString() + "\n");
+					_inputTextLenCounter.setString("");
+					_lineLength.push_back(_lineLength.back());
+					lineLengthIndex++;
+				}
+			}
+		}
+	}
+	else {
+		_inputText.setString("");
+		for (int i = 0; i < _inputString.size(); i++) {
+			_inputText.setString(_inputText.getString() + "*");
+		}
+	}
+}
+
 void TextBox::_updateCaretPosition()
 {
+	if (_isMultiLine) {
+		int i = 0;
+		int temp = _inputString.size() - _caretPosition;
+		_lineCount = 0;
+		while (temp > _lineLength[i]) {
+			i++;
+			_lineCount++;
+		}
+	}
+
 	sf::FloatRect textRect = _inputText.getGlobalBounds();
+	sf::FloatRect textCounterRect = _inputTextLenCounter.getGlobalBounds();
 	sf::FloatRect caretRect = _caret.getLocalBounds();
 	_caret.setOrigin(caretRect.left + caretRect.width / 2.0f, caretRect.top + caretRect.height / 2.0f);
 	int searchTextLen = _inputString.size();
 	if (searchTextLen != 0) {
-		_caret.setPosition(
-			textRect.left + textRect.width + 1.f - textRect.width / searchTextLen * _caretPosition,
-			_textBox.getPosition().y + _textBox.getSize().y / 2.0f
-		);
+		if (!_isMultiLine) {
+			_caret.setPosition(
+				textRect.left + textRect.width + 1.f - textRect.width / searchTextLen * _caretPosition,
+				_textBox.getPosition().y + _textBox.getSize().y / 2.0f
+			);
+		}
+		else {
+			if (_lineCount > 0) {
+				if (_lineCount == _lineLength.size() - 1) {
+					_caret.setPosition(
+						textRect.left + textCounterRect.width + 1.f - textCounterRect.width / (_lineLength[_lineCount] - _lineLength[_lineCount - 1]) * (_caretPosition + _lineLength[_lineCount] - _inputString.size()),
+						_textBox.getPosition().y + _singleWordHeight / 2.0f + 10.f + _lineCount * (_singleWordHeight + 8.f)
+					);
+				}
+				else {
+					_caret.setPosition(
+						textRect.left + textRect.width + 1.f - textRect.width / (_lineLength[_lineCount] - _lineLength[_lineCount - 1]) * (_caretPosition + _lineLength[_lineCount] - _inputString.size()),
+						_textBox.getPosition().y + _singleWordHeight / 2.0f + 10.f + _lineCount * (_singleWordHeight + 8.f)
+					);
+				}
+			}
+			else {
+				_caret.setPosition(
+					textRect.left + textRect.width + 1.f - textRect.width / _lineLength[_lineCount] * (_caretPosition + _lineLength[_lineCount] - _inputString.size()),
+					_textBox.getPosition().y + _singleWordHeight / 2.0f + 10.f + _lineCount * (_singleWordHeight + 8.f)
+				);
+			}
+		}
 	}
 	else {
-		_caret.setPosition(
-			textRect.left + textRect.width + 2.f,
-			_textBox.getPosition().y + _textBox.getSize().y / 2.0f
-		);
+		if (!_isMultiLine) {
+			_caret.setPosition(
+				textRect.left + textRect.width + 2.f,
+				_textBox.getPosition().y + _textBox.getSize().y / 2.0f
+			);
+		}
+		else {
+			_caret.setPosition(
+				textRect.left + textRect.width + 2.f,
+				_textBox.getPosition().y + _singleWordHeight / 2.0f + 10.f
+			);
+		}
 	}
 }
 
@@ -626,6 +744,74 @@ void TextBox::_setCaretPosition(sf::Vector2i mousePosition)
 		_caretPosition = 0;
 	}
 }
+
+
+
+TextDisplay::TextDisplay(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring text, bool isEditable, std::function<void()> editHandler) :
+	_textBox(size, position, font, fontSize),
+	_editButton(sf::Vector2f(50.f, 50.f), sf::Vector2f(position.x + size.x, position.y), "Icon/editIcon.png"),
+	_isEditable(isEditable),
+	_isEditing(false),
+	_editHandler(_editHandler)
+{
+	_textBox.setText(text);
+}
+
+TextDisplay::~TextDisplay()
+{
+
+}
+
+void TextDisplay::setText(std::wstring text)
+{
+	_textBox.setText(text);
+}
+
+std::wstring TextDisplay::getText()
+{
+	return _textBox.getText();
+}
+
+void TextDisplay::handleEvent(const sf::Event& event, sf::RenderWindow& window)
+{
+	if (_isEditable) {
+		_editButton.handleEvent(event, window);
+		if (_isEditing) {
+			_textBox.handleEvent(event, window);
+		}
+	}
+}
+
+void TextDisplay::update(sf::Time dt)
+{
+	if (_isEditing) {
+		_textBox.update(dt);
+	}
+}
+
+void TextDisplay::render(sf::RenderWindow& window)
+{
+	_textBox.render(window);
+	if (_isEditable) {
+		_editButton.render(window);
+	}
+}
+
+void TextDisplay::_editButtonOnClickHandler()
+{
+	_isEditing = true;
+	_editButton.setIcon("Icon/tickIcon.png");
+	_editButton.setOnClickHandler([&]() {_tickButtonOnClickHandler(); });
+}
+
+void TextDisplay::_tickButtonOnClickHandler()
+{
+	_isEditing = false;
+	_editButton.setIcon("Icon/editIcon.png");
+	_editButton.setOnClickHandler([&]() {_editButtonOnClickHandler(); });
+	_editHandler();
+}
+
 
 
 
