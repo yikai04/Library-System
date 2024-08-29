@@ -104,46 +104,46 @@ class IconButton : public Button
 
 class TextBox
 {
-public:
-	TextBox(float width, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText = L"输入框", const sf::Color& backgroundColor = sf::Color::White, bool isPassword = false);
-	TextBox(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText = L"输入框", const sf::Color& backgroundColor = sf::Color::White);
-	~TextBox();
-	void setText(std::wstring text);
-	std::wstring getText();
-	void handleEvent(const sf::Event& event, sf::RenderWindow& window);
-	void update(sf::Time dt);
-	void render(sf::RenderWindow& window);
+	public:
+		TextBox(float width, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText = L"输入框", const sf::Color& backgroundColor = sf::Color::White, bool isPassword = false);
+		TextBox(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText = L"输入框", const sf::Color& backgroundColor = sf::Color::White);
+		~TextBox();
+		void setText(std::wstring text);
+		std::wstring getText();
+		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
+		void update(sf::Time dt);
+		void render(sf::RenderWindow& window);
 	
-protected:
-	void _displayString();
-	void _updateCaretPosition();
-	void _setCaretPosition(sf::Vector2i mousePosition);
+	protected:
+		void _displayString();
+		void _updateCaretPosition();
+		void _setCaretPosition(sf::Vector2i mousePosition);
 
-	sf::RectangleShape _textBox;
-	sf::Text _inputText;
-	sf::Text _inputTextLenCounter;
-	sf::Text _placeHolderText;
-	sf::Cursor _cursor;
-	sf::Cursor::Type _cursorType;
-	std::wstring _inputString;
+		sf::RectangleShape _textBox;
+		sf::Text _inputText;
+		sf::Text _inputTextLenCounter;
+		sf::Text _placeHolderText;
+		sf::Cursor _cursor;
+		sf::Cursor::Type _cursorType;
+		std::wstring _inputString;
 
-	sf::RectangleShape _caret;
-	bool _caretVisible;
-	int _caretPosition;
-	sf::Time _caretTimer;
+		sf::RectangleShape _caret;
+		bool _caretVisible;
+		int _caretPosition;
+		sf::Time _caretTimer;
 
-	bool _isActivated;
-	bool _isPassword;
-	bool _isMultiLine;
-	int _lineCount;
-	std::vector<int> _lineLength;
-	float _singleWordHeight;
+		bool _isActivated;
+		bool _isPassword;
+		bool _isMultiLine;
+		int _lineCount;
+		std::vector<int> _lineLength;
+		float _singleWordHeight;
 };
 
 class TextDisplay
 {
 	public:
-		TextDisplay(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring text = L"", bool isEditable = false, std::function<void()> editHandler = []() {});
+		TextDisplay(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, sf::Color backgroundColor = sf::Color::White, const std::wstring placeHolderText = L"输入框", const std::wstring text = L"", bool isEditable = false, std::function<bool()> editHandler = []() {return true; });
 		~TextDisplay();
 		void setText(std::wstring text);
 		std::wstring getText();
@@ -159,13 +159,13 @@ class TextDisplay
 		IconButton _editButton;
 		bool _isEditable;
 		bool _isEditing;
-		std::function<void()> _editHandler;
+		std::function<bool()> _editHandler;
 };
 
 class DropDown
 {
 	public:
-		DropDown(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring defaultOption = L"");
+		DropDown(sf::Vector2f size, sf::Vector2f position, const sf::Color& backgroundColor, const sf::Font& font, const int& fontSize, const std::wstring defaultOption = L"");
 		~DropDown();
 		void setOptions(std::vector<std::wstring> options);
 		bool isDropDownVisible();
@@ -188,6 +188,7 @@ class DropDown
 		bool _isDropDownVisible;
 		sf::Font _font;
 		int _fontSize;
+		sf::Color _backgroundColor;
 };
 
 class SearchBar : public TextBox

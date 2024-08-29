@@ -10,6 +10,7 @@ enum class Page
     Home,
     Search,
     Login,
+    Signup,
     Records,
 	Statistics,
     Setting

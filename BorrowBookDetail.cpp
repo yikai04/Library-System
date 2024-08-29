@@ -8,11 +8,12 @@ BorrowBookDetail::BorrowBookDetail():
 
 }
 
-BorrowBookDetail::BorrowBookDetail(int id, int bookId, int userId, Date borrowDate, Date returnDate) :
+BorrowBookDetail::BorrowBookDetail(int id, int bookId, int userId, Date borrowDate, Date dueDate, Date returnDate) :
 	_id(id),
 	_bookId(bookId),
 	_userId(userId),
 	_borrowDate(borrowDate),
+	_dueDate(dueDate),
 	_returnDate(returnDate)
 {
 
@@ -48,6 +49,16 @@ void BorrowBookDetail::setBorrowDate(std::string borrowDate)
 	_borrowDate.setDate(borrowDate);
 }
 
+void BorrowBookDetail::setDueDate(Date dueDate)
+{
+	_dueDate = dueDate;
+}
+
+void BorrowBookDetail::setDueDate(std::string dueDate)
+{
+	_dueDate.setDate(dueDate);
+}
+
 void BorrowBookDetail::setReturnDate(Date returnDate)
 {
 	_returnDate = returnDate;
@@ -76,6 +87,11 @@ int BorrowBookDetail::getUserId()
 Date BorrowBookDetail::getBorrowDate()
 {
 	return _borrowDate;
+}
+
+Date BorrowBookDetail::getDueDate()
+{
+	return _dueDate;
 }
 
 Date BorrowBookDetail::getReturnDate()

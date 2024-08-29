@@ -1,4 +1,6 @@
-﻿#include "User.hpp"
+﻿#include <regex>
+
+#include "User.hpp"
 #include "Config.h"
 #include "Utils.hpp"
 
@@ -93,6 +95,16 @@ UserType User::getUserType()
 	return _userType;
 }
 
+std::wstring User::getId()
+{
+	return std::to_wstring(_userId);
+}
+
+std::wstring User::getUsername()
+{
+	return _username;
+}
+
 std::wstring User::getName()
 {
 	return _name;
@@ -111,6 +123,120 @@ std::wstring User::getEmail()
 std::wstring User::getGender()
 {
 	return _gender;
+}
+
+bool User::changeEmail(std::wstring email)
+{
+	std::regex emailPattern("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$");
+	std::string emailStr = wstring_to_string(email);
+	if (!std::regex_match(emailStr, emailPattern)) {
+		return false;
+	}
+
+	const char* sql = "UPDATE user_info SET email = ? WHERE id = ?";
+	int rc;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	rc = sqlite3_bind_text(stmt, 1, emailStr.c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_int(stmt, 2, _userId);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	rc = sqlite3_step(stmt);
+	if (rc == SQLITE_DONE) {
+		_email = email;
+		sqlite3_finalize(stmt);
+		return true;
+	}
+	else {
+		sqlite3_finalize(stmt);
+		return false;
+	}
+}
+
+bool User::changeName(std::wstring name)
+{
+	const char* sql = "UPDATE user_info SET name = ? WHERE id = ?";
+	int rc;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	std::string nameStr = wstring_to_string(name);
+	rc = sqlite3_bind_text(stmt, 1, nameStr.c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_int(stmt, 2, _userId);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	rc = sqlite3_step(stmt);
+	if (rc == SQLITE_DONE) {
+		_name = name;
+		sqlite3_finalize(stmt);
+		return true;
+	}
+	else {
+		sqlite3_finalize(stmt);
+		return false;
+	}
+}
+
+bool User::setGender(std::wstring gender)
+{
+	std::string genderStr;
+	if (gender == L"男") {
+		genderStr = "M";
+	}
+	else if (gender == L"女") {
+		genderStr = "F";
+	}
+	else {
+		return false;
+	}
+
+	const char* sql = "UPDATE user_info SET gender = ? WHERE id = ?";
+	int rc;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	rc = sqlite3_bind_text(stmt, 1, genderStr.c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_int(stmt, 2, _userId);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	rc = sqlite3_step(stmt);
+	if (rc == SQLITE_DONE) {
+		_gender = gender;
+		sqlite3_finalize(stmt);
+		return true;
+	}
+	else {
+		sqlite3_finalize(stmt);
+		return false;
+	}
 }
 
 Book User::getBookInfoById(int id)
@@ -147,7 +273,8 @@ Book User::getBookInfoById(int id)
 		book.setPrice(sqlite3_column_double(stmt, 9));
 		book.setDescription(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 10)));
 		book.setImgUrl(std::string((const char*)sqlite3_column_text(stmt, 11)));
-		book.setDelFlg(sqlite3_column_int(stmt, 12));
+		book.setBorrowVolume(sqlite3_column_int(stmt, 12));
+		book.setDelFlg(sqlite3_column_int(stmt, 13));
 
 		sqlite3_finalize(stmt);
 		return book;
@@ -218,7 +345,8 @@ std::vector<Book> User::searchBooksInfo(std::wstring searchWord, const std::wstr
 		book.setPrice(sqlite3_column_double(stmt, 9));
 		book.setDescription(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 10)));
 		book.setImgUrl(std::string((const char*)sqlite3_column_text(stmt, 11)));
-		book.setDelFlg(sqlite3_column_int(stmt, 12));
+		book.setBorrowVolume(sqlite3_column_int(stmt, 12));
+		book.setDelFlg(sqlite3_column_int(stmt, 13));
 
 		books.push_back(book);
 
@@ -288,7 +416,8 @@ std::vector<Book> User::searchBooksInfoByName(std::wstring bookName, const std::
 		book.setPrice(sqlite3_column_double(stmt, 9));
 		book.setDescription(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 10)));
 		book.setImgUrl(std::string((const char*)sqlite3_column_text(stmt, 11)));
-		book.setDelFlg(sqlite3_column_int(stmt, 12));
+		book.setBorrowVolume(sqlite3_column_int(stmt, 12));
+		book.setDelFlg(sqlite3_column_int(stmt, 13));
 
 		books.push_back(book);
 
@@ -358,7 +487,8 @@ std::vector<Book> User::searchBooksInfoByAuthor(std::wstring author, const std::
 		book.setPrice(sqlite3_column_double(stmt, 9));
 		book.setDescription(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 10)));
 		book.setImgUrl(std::string((const char*)sqlite3_column_text(stmt, 11)));
-		book.setDelFlg(sqlite3_column_int(stmt, 12));
+		book.setBorrowVolume(sqlite3_column_int(stmt, 12));
+		book.setDelFlg(sqlite3_column_int(stmt, 13));
 
 		books.push_back(book);
 
@@ -428,7 +558,8 @@ std::vector<Book> User::searchBooksInfoByPublisher(std::wstring publisher, const
 		book.setPrice(sqlite3_column_double(stmt, 9));
 		book.setDescription(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 10)));
 		book.setImgUrl(std::string((const char*)sqlite3_column_text(stmt, 11)));
-		book.setDelFlg(sqlite3_column_int(stmt, 12));
+		book.setBorrowVolume(sqlite3_column_int(stmt, 12));
+		book.setDelFlg(sqlite3_column_int(stmt, 13));
 
 		books.push_back(book);
 
@@ -466,7 +597,8 @@ std::vector<BorrowBookDetail> User::getBorrowedBooks()
 		borrowBookDetail.setBookId(sqlite3_column_int(stmt, 1));
 		borrowBookDetail.setUserId(sqlite3_column_int(stmt, 2));
 		borrowBookDetail.setBorrowDate(std::string((const char*)sqlite3_column_text(stmt, 3)));
-		borrowBookDetail.setReturnDate(std::string((const char*)sqlite3_column_text(stmt, 4)));
+		borrowBookDetail.setDueDate(std::string((const char*)sqlite3_column_text(stmt, 4)));
+		borrowBookDetail.setReturnDate(std::string((const char*)sqlite3_column_text(stmt, 5)));
 
 		borrowBookDetailList.push_back(borrowBookDetail);
 
@@ -517,6 +649,7 @@ void User::_setUserDetail()
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_ROW) {
 		_name = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 1));
+		_username = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 2));
 		_registerDate = Date(std::string((const char*)sqlite3_column_text(stmt, 5)));
 		_gender = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 6));
 		_email = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 7));

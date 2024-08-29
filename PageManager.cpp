@@ -5,6 +5,7 @@
 #include "StatisticsPage.hpp"
 #include "SettingPage.hpp"
 #include "LoginPage.hpp"
+#include "SignupPage.hpp"
 
 
 PageManager::PageManager(User& user):
@@ -18,6 +19,7 @@ PageManager::PageManager(User& user):
 	pages[Page::Statistics] = std::make_unique<StatisticsPage>(user, *this);
 	pages[Page::Setting] = std::make_unique<SettingPage>(user, *this);
 	pages[Page::Login] = std::make_unique<LoginPage>(user, *this);
+	pages[Page::Signup] = std::make_unique<SignupPage>(user, *this);
 }
 
 PageManager::~PageManager()

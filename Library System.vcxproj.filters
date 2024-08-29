@@ -60,6 +60,30 @@
     <ClInclude Include="SettingPage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Dependencies\Bcrypt\bcrypt.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dependencies\Bcrypt\BCrypt.hpp">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dependencies\Bcrypt\crypt.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dependencies\Bcrypt\crypt_blowfish.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dependencies\Bcrypt\crypt_gensalt.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dependencies\Bcrypt\ow-crypt.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dependencies\Bcrypt\winbcrypt.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SignupPage.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -111,6 +135,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SettingPage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Dependencies\Bcrypt\bcrypt.c">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Dependencies\Bcrypt\crypt_blowfish.c">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Dependencies\Bcrypt\crypt_gensalt.c">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Dependencies\Bcrypt\wrapper.c">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SignupPage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

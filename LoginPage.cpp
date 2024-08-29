@@ -13,7 +13,8 @@ LoginPage::LoginPage(User& user, PageManager& pageManager) :
 
     _username(550.f, sf::Vector2f(660, 500), _font, 35, L"用户名", sf::Color::Transparent,false),
 	_password(550.f, sf::Vector2f(660, 625), _font, 35, L"密码", sf::Color::Transparent, true),
-	_loginButton(sf::Vector2f(600, 70), sf::Vector2f(630, 755), [&]() {_loginHandler(); }, sf::Color::Transparent)
+	_loginButton(sf::Vector2f(600, 70), sf::Vector2f(630, 755), [&]() {_loginHandler(); }, sf::Color::Transparent),
+	_signupButton(sf::Vector2f(600, 50), sf::Vector2f(630, 840), sf::Color::Transparent, L"没有账号？ 注册", _font, 22, 20, sf::Color(203, 140, 63, 255), sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Signup); }, false)
 
 {
     _backgroundTexture.loadFromFile("Image/LoginPage.png");
@@ -41,6 +42,7 @@ void LoginPage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 	_username.handleEvent(event, window);
 	_password.handleEvent(event, window);
 	_loginButton.handleEvent(event, window);
+	_signupButton.handleEvent(event, window);
 }
 
 void LoginPage::update(sf::Time dt)
@@ -63,6 +65,7 @@ void LoginPage::render(sf::RenderWindow& window)
 	_username.render(window);
 	_password.render(window);
 	_loginButton.render(window);
+	_signupButton.render(window);
     //window.display() called in main.cpp
 }
 

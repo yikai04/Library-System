@@ -1,6 +1,6 @@
 ﻿#include "Book.hpp"
 
-Book::Book():
+Book::Book() :
 	_id(-1),
 	_bookName(L""),
 	_author(L""),
@@ -13,12 +13,13 @@ Book::Book():
 	_price(0),
 	_description(L""),
 	_imgUrl(""),
+	_borrowVolume(0),
 	_delFlg(false)
 {
 
 }
 
-Book::Book(int id, std::wstring bookName, std::wstring author, std::wstring publisher, BookCategory category, Date publishDate, int pages, int totalBook, int remainBook, double price, std::wstring _description, std::string img_url, bool del_flg) :
+Book::Book(int id, std::wstring bookName, std::wstring author, std::wstring publisher, BookCategory category, Date publishDate, int pages, int totalBook, int remainBook, double price, std::wstring _description, std::string img_url, int borrowVolume, bool del_flg) :
 	_id(id),
 	_bookName(bookName),
 	_author(author),
@@ -31,6 +32,7 @@ Book::Book(int id, std::wstring bookName, std::wstring author, std::wstring publ
 	_price(price),
 	_description(_description),
 	_imgUrl(img_url),
+	_borrowVolume(borrowVolume),
 	_delFlg(del_flg)
 {
 
@@ -130,6 +132,11 @@ std::wstring Book::getDescription()
 std::string Book::getImgUrl()
 {
 	return _imgUrl;
+}
+
+int Book::getBorrowVolume()
+{
+	return _borrowVolume;
 }
 
 bool Book::getDelFlg()
@@ -248,6 +255,11 @@ void Book::setDescription(std::wstring description)
 void Book::setImgUrl(std::string imgUrl)
 {
 	_imgUrl = "BookImage/" + imgUrl;
+}
+
+void Book::setBorrowVolume(int borrowVolume)
+{
+	_borrowVolume = borrowVolume;
 }
 
 void Book::setDelFlg(bool delFlg)

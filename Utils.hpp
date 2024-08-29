@@ -13,7 +13,7 @@ constexpr const char* CREATE_USER_INFO_TABLE_SQLCMD = "CREATE TABLE IF NOT EXIST
 														`id` INT(11) NOT NULL , \
 														`name` varchar(200) DEFAULT NULL , \
 														`username` varchar(50) DEFAULT NULL , \
-														`password` varchar(50) DEFAULT NULL , \
+														`password` varchar(100) DEFAULT NULL , \
 														`role` varchar(50) DEFAULT 'Student' , \
 														`register_date` date DEFAULT NULL , \
 														`gender` varchar(1) DEFAULT NULL , \
@@ -29,12 +29,13 @@ constexpr const char* CREATE_BOOK_INFO_TABLE_SQLCMD = "CREATE TABLE IF NOT EXIST
 														`publisher` varchar(50) DEFAULT NULL , \
 														`category` varchar(50) DEFAULT '其他' , \
 														`publish_date` date DEFAULT NULL , \
-														`pages` int(10) DEFAULT '100' , \
+														`pages` int(10) DEFAULT '0' , \
 														`total_book` INT(10) DEFAULT '1' , \
 														`remain_book` INT(10) DEFAULT '1' , \
 														`price` double DEFAULT '1' , \
 														`description` varchar(15000) DEFAULT '' , \
 														`img_url` varchar(200) DEFAULT NULL , \
+														`borrow_volume` INT(10) DEFAULT '0' , \
 														`del_flg` int(1) DEFAULT '0' , \
 														PRIMARY KEY(`id`) \
 														);";
@@ -43,8 +44,9 @@ constexpr const char* CREATE_BORROW_INFO_TABLE_SQLCMD = "CREATE TABLE IF NOT EXI
 														`id` INT(11) NOT NULL , \
 														`book_id` INT(11) DEFAULT NULL , \
 														`user_id` INT(11) DEFAULT NULL , \
-														`borrow_date` varchar(10) DEFAULT NULL , \
-														`return_date` varchar(10) DEFAULT NULL , \
+														`borrow_date` date DEFAULT NULL , \
+														`due_date` date DEFAULT NULL , \
+														`return_date` date DEFAULT NULL , \
 														PRIMARY KEY(`id`) \
 														);";
 

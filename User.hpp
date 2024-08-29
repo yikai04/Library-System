@@ -21,10 +21,21 @@ class User
 		int login(std::wstring username, std::wstring password);
 		void logout();
 		UserType getUserType();
+		std::wstring getId();
+		std::wstring getUsername();
 		std::wstring getName();
 		Date getRegisterDate();
 		std::wstring getEmail();
 		std::wstring getGender();
+
+		bool changeUsername(std::wstring username);
+		bool changeEmail(std::wstring email);
+		bool changeName(std::wstring name);
+		bool changeId(int id);
+		bool changeGender(std::wstring gender);
+		bool changeRole(std::wstring role);
+		bool changePassword(std::wstring password);
+
 		//void registerAccount(std::wstring username, std::wstring password);
 		//void deleteAccount();
 		//void changeUsername(std::wstring newUsername);
@@ -48,12 +59,15 @@ class User
 	private:
 		void _setUserType(std::string type);
 		void _setUserDetail();
+		bool _checkUsernameValidaty(std::wstring username);
+		bool _checkIdValidaty(int id);
 		sf::RenderWindow _window;
 		sf::Clock _clock;
 		UserType _userType;
 		PageManager _pageManager;
 
 		int _userId;
+		std::wstring _username;
 		std::wstring _name;
 		Date _registerDate;
 		std::wstring _email;

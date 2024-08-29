@@ -20,7 +20,7 @@ class Book
 {
 	public:
 		Book();
-		Book(int id, std::wstring bookName, std::wstring author, std::wstring publisher, BookCategory category, Date publishDate, int pages, int totalBook, int remainBook, double price, std::wstring _description, std::string img_url, bool del_flg);
+		Book(int id, std::wstring bookName, std::wstring author, std::wstring publisher, BookCategory category, Date publishDate, int pages, int totalBook, int remainBook, double price, std::wstring _description, std::string img_url, int borrowVolume, bool del_flg);
 		~Book();
 		int getId();
 		std::wstring getBookName();
@@ -35,6 +35,7 @@ class Book
 		double getPrice();
 		std::wstring getDescription();
 		std::string getImgUrl();
+		int getBorrowVolume();
 		bool getDelFlg();
 
 		void setId(int id);
@@ -51,6 +52,7 @@ class Book
 		void setPrice(double price);
 		void setDescription(std::wstring description);
 		void setImgUrl(std::string imgUrl);
+		void setBorrowVolume(int borrowVolume);
 		void setDelFlg(bool delFlg);
 
 	private:
@@ -66,5 +68,6 @@ class Book
 		double _price;
 		std::wstring _description;	
 		std::string _imgUrl;
+		int _borrowVolume;
 		bool _delFlg;
 };

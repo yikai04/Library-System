@@ -2,11 +2,11 @@
 #include "PageBase.hpp"
 #include "Widgets.hpp"
 
-class SettingPage : public PageBase
+class SignupPage : public PageBase
 {
     public:
-        SettingPage(User& user, PageManager& pageManager);
-        ~SettingPage();
+        SignupPage(User& user, PageManager& pageManager);
+        ~SignupPage();
         void handleEvent(const sf::Event& event, sf::RenderWindow& window);
         void update(sf::Time dt);
         void render(sf::RenderWindow& window);
@@ -14,14 +14,7 @@ class SettingPage : public PageBase
 
     protected:
         void _logoutHandler();
-        void _showUserInfo();
-		bool _updateUsername();
-		bool _updateEmail();
-		bool _updateName();
-		bool _updateId();
-		bool _updateGender();
-		bool _updateRole();
-		bool _updatePassword();
+		void _signupHandler();
 
     private:
         sf::Texture _backgroundTexture;
@@ -34,13 +27,14 @@ class SettingPage : public PageBase
         TextToogleButton _topBarButton5;
         TextToogleButton _topBarButton6;
 
-		TextDisplay _username;
-		TextDisplay _email;
-        TextDisplay _name;
-        TextDisplay _id;
-        TextDisplay _registerDate;
-        DropDown _gender;
-		DropDown _role;
+        TextBox _username;
 		TextBox _password;
 		TextBox _confirmPassword;
+		TextBox _name;
+        TextBox _email;
+        TextBox _id;
+		DropDown _role;
+		DropDown _gender;
+		Button _signupButton;
+		TextToogleButton _loginButton;
 };

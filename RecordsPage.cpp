@@ -12,7 +12,7 @@ RecordsPage::RecordsPage(User& user, PageManager& pageManager) :
 	_topBarButton5(sf::Vector2f(150, 70), sf::Vector2f(1480, 80), sf::Color::Transparent, L"用户设置", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Setting); }),
 	_topBarButton6(sf::Vector2f(100, 70), sf::Vector2f(1680, 80), sf::Color::Transparent, L"登录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Login); }),
 
-	_table(sf::Vector2f(1650,600), sf::Vector2f(130,200), _font, 30, {L"序号", L"书名", L"借书日期", L"归还日期", L"备注"}, {150.f, 600.f, 250.f, 250.f, 400.f}, 100.f, sf::Color::Cyan, sf::Color::White, sf::Color::Magenta)
+	_table(sf::Vector2f(1650,600), sf::Vector2f(130,200), _font, 30, {L"序号", L"书名", L"借书日期", L"归还日期", L"备注"}, {150.f, 600.f, 250.f, 250.f, 400.f}, 100.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128))
 {
 	_backgroundTexture.loadFromFile("Image/Background(1920x1080).png");
 

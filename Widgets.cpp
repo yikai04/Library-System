@@ -747,8 +747,8 @@ void TextBox::_setCaretPosition(sf::Vector2i mousePosition)
 
 
 
-TextDisplay::TextDisplay(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring text, bool isEditable, std::function<void()> editHandler) :
-	_textBox(size, position, font, fontSize),
+TextDisplay::TextDisplay(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, sf::Color backgroundColor, const std::wstring placeHolderText, const std::wstring text, bool isEditable, std::function<bool()> editHandler) :
+	_textBox(size, position, font, fontSize, placeHolderText, backgroundColor),
 	_editButton(sf::Vector2f(50.f, 50.f), sf::Vector2f(position.x + size.x, position.y), "Icon/editIcon.png", [&]() {_editButtonOnClickHandler(); }),
 	_isEditable(isEditable),
 	_isEditing(false),
@@ -800,28 +800,29 @@ void TextDisplay::render(sf::RenderWindow& window)
 void TextDisplay::_editButtonOnClickHandler()
 {
 	_isEditing = true;
-	_editButton.setIcon("Icon/tickIcon.jpg");
+	_editButton.setIcon("Icon/tickIcon.png");
 	_editButton.setOnClickHandler([&]() {_tickButtonOnClickHandler(); });
 }
 
 void TextDisplay::_tickButtonOnClickHandler()
 {
-	_isEditing = false;
-	_editButton.setIcon("Icon/editIcon.png");
-	_editButton.setOnClickHandler([&]() {_editButtonOnClickHandler(); });
-
-	_editHandler();
+	if (_editHandler()) {
+		_isEditing = false;
+		_editButton.setIcon("Icon/editIcon.png");
+		_editButton.setOnClickHandler([&]() {_editButtonOnClickHandler(); });
+	}
 }
 
 
 
 
-DropDown::DropDown(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring defaultOption) :
-	_dropDownButton(size, position, sf::Color(200, 200, 200, 255), defaultOption + L"▼", font, fontSize, sf::Color::Black, [&]() {this->dropDownButtonOnClickHandler(); }),
+DropDown::DropDown(sf::Vector2f size, sf::Vector2f position, const sf::Color& backgroundColor, const sf::Font& font, const int& fontSize, const std::wstring defaultOption) :
+	_dropDownButton(size, position, backgroundColor, defaultOption + L"▼", font, fontSize, sf::Color::Black, [&]() {this->dropDownButtonOnClickHandler(); }),
 	_selectedOption(defaultOption),
 	_isDropDownVisible(false),
 	_font(font),
-	_fontSize(fontSize)
+	_fontSize(fontSize),
+	_backgroundColor(backgroundColor)
 {
 
 }
@@ -915,7 +916,7 @@ void DropDown::_createOptionButtons()
 	for (int i = 0; i < _options.size(); i++) {
 		if (_options[i] != _selectedOption) {
 			std::wstring text(_options[i]);
-			TextToogleButton* optionButton = new TextToogleButton(_dropDownButton.getSize(), sf::Vector2f(_dropDownButton.getPosition().x, _dropDownButton.getPosition().y + _dropDownButton.getSize().y * positionIndex), sf::Color(200, 200, 200, 255), text, _font, _fontSize, _fontSize, sf::Color::Black, sf::Color(203, 140, 63, 255), [=]() {this->optionButtonOnClickHandler(text); }, false);
+			TextToogleButton* optionButton = new TextToogleButton(_dropDownButton.getSize(), sf::Vector2f(_dropDownButton.getPosition().x, _dropDownButton.getPosition().y + _dropDownButton.getSize().y * positionIndex), _backgroundColor, text, _font, _fontSize, _fontSize, sf::Color::Black, sf::Color(203, 140, 63, 255), [=]() {this->optionButtonOnClickHandler(text); }, false);
 			_optionButtons.push_back(optionButton);
 			positionIndex++;
 		}
@@ -937,8 +938,8 @@ void DropDown::_deleteOptionButtons()
 SearchBar::SearchBar(float width, sf::Vector2f position, const std::wstring placeHolderText, const sf::Font& font, const int& fontSize, std::function<void()> searchHandler) :
 	TextBox(width, position, font, fontSize, placeHolderText),
 	_searchButton(sf::Vector2f(_textBox.getSize().y, _textBox.getSize().y), sf::Vector2f(_textBox.getPosition().x + _textBox.getSize().x, _textBox.getPosition().y), "Icon/searchIcon.png", searchHandler),
-	_bookCategoryDropDown(sf::Vector2f(350.f, _textBox.getSize().y), sf::Vector2f(_textBox.getPosition().x - 350.f, _textBox.getPosition().y), font, fontSize, L"全部"),
-	_searchTypeDropDown(sf::Vector2f(200.f, _textBox.getSize().y), sf::Vector2f(_textBox.getPosition().x + width + _textBox.getSize().y, _textBox.getPosition().y), font, fontSize, L"全部"),
+	_bookCategoryDropDown(sf::Vector2f(350.f, _textBox.getSize().y), sf::Vector2f(_textBox.getPosition().x - 350.f, _textBox.getPosition().y), sf::Color(200,200,200,255), font, fontSize, L"全部"),
+	_searchTypeDropDown(sf::Vector2f(200.f, _textBox.getSize().y), sf::Vector2f(_textBox.getPosition().x + width + _textBox.getSize().y, _textBox.getPosition().y), sf::Color(200, 200, 200, 255), font, fontSize, L"全部"),
 	_searchHandler(searchHandler)
 {
 	_bookCategoryDropDown.setOptions({ L"全部", L"小说类", L"传记与回忆录", L"历史与文化", L"科学与自然", L"商业与经济", L"健康与生活方式", L"艺术与设计", L"语言与文学", L"参考手册", L"儿童读物", L"其他"});
