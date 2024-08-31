@@ -22,7 +22,7 @@ class Book
 		Book();
 		Book(int id, std::wstring bookName, std::wstring author, std::wstring publisher, BookCategory category, Date publishDate, int pages, int totalBook, int remainBook, double price, std::wstring _description, std::string img_url, int borrowVolume, bool del_flg);
 		~Book();
-		int getId();
+		int getBookId();
 		std::wstring getBookName();
 		std::wstring getAuthor();
 		std::wstring getPublisher();
@@ -38,7 +38,7 @@ class Book
 		int getBorrowVolume();
 		bool getDelFlg();
 
-		void setId(int id);
+		void setBookId(int id);
 		void setBookName(std::wstring bookName);
 		void setAuthor(std::wstring author);
 		void setPublisher(std::wstring publisher);

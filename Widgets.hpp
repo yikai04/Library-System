@@ -146,6 +146,7 @@ class TextDisplay
 		TextDisplay(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, sf::Color backgroundColor = sf::Color::White, const std::wstring placeHolderText = L"输入框", const std::wstring text = L"", bool isEditable = false, std::function<bool()> editHandler = []() {return true; });
 		~TextDisplay();
 		void setText(std::wstring text);
+		void setEditable(bool isEditable);
 		std::wstring getText();
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
 		void update(sf::Time dt);
@@ -199,6 +200,7 @@ class TextDisplayDropDown
 		TextDisplayDropDown(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, sf::Color backgroundColor = sf::Color::White, const std::wstring text = L"", std::vector<std::wstring> options = {L""}, bool isEditable = false, std::function<bool()> editHandler = []() {return true; });
 		~TextDisplayDropDown();
 		void setText(std::wstring text);
+		void setEditable(bool isEditable);
 		std::wstring getText();
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
 		void update(sf::Time dt);
@@ -253,13 +255,14 @@ class PageNumber : TextBox
 class BookDisplay
 {
 	public:
-		BookDisplay(sf::Vector2f bookCoverSize, sf::Vector2f position, const sf::Font& font, const int& fontSize, bool isVisible = true);
+		BookDisplay(sf::Vector2f bookCoverSize, sf::Vector2f position, const sf::Font& font, const int& fontSize, bool isVisible = true, std::function<void()> onClickHandler = []() {});
 		~BookDisplay();
 		void setBook(Book* book);
 		void setBookCover(const std::string& bookCoverPath);
 		void setBookName(const std::wstring& bookName);
 		//void setAuthor(const std::wstring& author);
 		void setPosition(const sf::Vector2f& position);
+		void setOnClickHandler(std::function<void()> onClickHandler);
 		void setVisiblity(bool isVisible);
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
 		void render(sf::RenderWindow& window);
@@ -269,17 +272,12 @@ class BookDisplay
 		TextToogleButton _bookName;
 		Book* _book;
 		bool _isVisible;
-
-		////Popup
-		//sf::RectangleShape _mask;
-		//sf::RectangleShape _popup;
-
 };
 
 class BooksDisplayInRow
 {
 	public:
-		BooksDisplayInRow(float postionY, const sf::Font& font);
+		BooksDisplayInRow(float postionY, const sf::Font& font, std::function<void(Book*)> onClickHandler);
 		~BooksDisplayInRow();
 		void setBooks(std::vector<Book>&& books);
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
@@ -300,6 +298,7 @@ class BooksDisplayInRow
 		IconButton _rightArrow;
 		int _currentDisplayPage;
 		int _maxBooksIndex;
+		std::function<void(Book*)> _onClickHandler;
 };
 
 class BooksDisplayInPage
@@ -335,42 +334,75 @@ class BooksDisplayInPage
 
 class Table
 {
-public:
-	Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, const float& rowHeight, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2);
-	~Table();
-	void setHeaders(std::vector<std::wstring>&& headers);
-	void setRows(std::vector<std::vector<std::wstring>>&& rows, std::vector<Book>&& books);
-	void handleEvent(const sf::Event& event, sf::RenderWindow& window);
-	void render(sf::RenderWindow& window);
+	public:
+		Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, const float& rowHeight, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2);
+		~Table();
+		void setHeaders(std::vector<std::wstring>&& headers);
+		void setRows(std::vector<std::vector<std::wstring>>&& rows, std::vector<Book>&& books);
+		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
+		void render(sf::RenderWindow& window);
 
-protected:
-	class _row {
-		public:
-			_row(sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring> rowData, std::vector<float> rowWidth, float rowHeight, sf::Color backgroundColor);
-			~_row();
-			void handleEvent(const sf::Event& event, sf::RenderWindow& window);
-			void render(sf::RenderWindow& window);
+	protected:
+		class _row {
+			public:
+				_row(sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring> rowData, std::vector<float> rowWidth, float rowHeight, sf::Color backgroundColor);
+				~_row();
+				void handleEvent(const sf::Event& event, sf::RenderWindow& window);
+				void render(sf::RenderWindow& window);
 
-		private:
-			std::vector<TextToogleButton*> _rowButtons;
-			std::vector<std::wstring> _rowData;
-			std::vector<float> _rowWidth;
-			float _rowHeight;
-	};
-	void _updateRows();
-	void _updateHeaders();
-	std::vector<std::vector<std::wstring>> _rowsData;
-	std::vector<Book> _books;
-	std::vector<std::wstring> _headers;
-	std::vector<TextToogleButton*> _headerButtons;
-	std::vector<_row*> _rowDisplay;
-	std::vector<float> _rowWidth;
-	float _rowHeight;
-	sf::View _view;
-	sf::Font _font;
-	sf::Color _headerColor;
-	sf::Color _rowColor1;
-	sf::Color _rowColor2;
-	sf::Vector2f _position;
-	int _fontSize;
+			private:
+				std::vector<TextToogleButton*> _rowButtons;
+				std::vector<std::wstring> _rowData;
+				std::vector<float> _rowWidth;
+				float _rowHeight;
+		};
+		void _updateRows();
+		void _updateHeaders();
+		std::vector<std::vector<std::wstring>> _rowsData;
+		std::vector<Book> _books;
+		std::vector<std::wstring> _headers;
+		std::vector<TextToogleButton*> _headerButtons;
+		std::vector<_row*> _rowDisplay;
+		std::vector<float> _rowWidth;
+		float _rowHeight;
+		sf::View _view;
+		sf::Font _font;
+		sf::Color _headerColor;
+		sf::Color _rowColor1;
+		sf::Color _rowColor2;
+		sf::Vector2f _position;
+		int _fontSize;
+};
+
+class BookDetailPopUp
+{
+	public:
+		BookDetailPopUp(const sf::Font& font, bool isPopUp = false, bool isEditable = false, std::function<void()> editFunction = []() {});
+		~BookDetailPopUp();
+		void setBook(Book* book);
+		void setPopUpVisiblity(bool isVisible);
+		void setEditable(bool isEditable);
+		bool getPopUpVisiblity();
+		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
+		void render(sf::RenderWindow& window);
+
+	protected:
+		void _closePopUp();
+		sf::RectangleShape _mask;
+		sf::RectangleShape _popup;
+		TextDisplay _bookId;
+		TextDisplay _bookName;
+		TextDisplay _bookAuthor;
+		TextDisplay _bookPublisher;
+		TextDisplayDropDown _bookCategory;
+		TextDisplay _totalPage;
+		TextDisplay _publishDate;
+		TextDisplay _bookPrice;
+		TextDisplay _bookAvailableStock;
+		TextDisplay _bookTotalStock;
+		TextDisplay _bookDescription;
+		IconButton _bookImage;
+		IconButton _closeButton;
+		bool _isPopUp;
+		std::function<void()> _editFunction;
 };

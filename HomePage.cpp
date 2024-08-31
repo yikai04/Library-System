@@ -12,7 +12,8 @@ HomePage::HomePage(User& user, PageManager& pageManager) :
     _topBarButton6(sf::Vector2f(100, 70), sf::Vector2f(1680, 80), sf::Color::Transparent, L"登录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Login); }),
 
     _searchBar(700.0, sf::Vector2f(650, 200), L"搜索", _font, 35),
-    _bookRowDisplay(720.f, _font)
+    _bookRowDisplay(720.f, _font, [&](Book* book) {_bookDetailPopUpHandler(book); }),
+    _bookDetailPopUp(_font, false, false)
 {
     _backgroundTexture.loadFromFile("Image/Background(1920x1080).png");
     //_sprite.setTextureRect(sf::IntRect(0, 0, 800, 800));
@@ -31,6 +32,11 @@ HomePage::~HomePage()
 
 void HomePage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 {
+	if (_bookDetailPopUp.getPopUpVisiblity())
+	{
+		_bookDetailPopUp.handleEvent(event, window);
+		return;
+	}
 	_topBarButton1.handleEvent(event, window);
 	_topBarButton2.handleEvent(event, window);
 	_topBarButton3.handleEvent(event, window);
@@ -60,7 +66,7 @@ void HomePage::render(sf::RenderWindow& window)
 
     _searchBar.render(window);
     _bookRowDisplay.render(window);
-
+	_bookDetailPopUp.render(window);
     //window.display() called in main.cpp
 }
 
@@ -80,4 +86,10 @@ void HomePage::_logoutHandler()
     _topBarButton6.setText(L"登录");
     _topBarButton6.setOnClickHandler([&]() {_pageManager.setPage(Page::Login); });
     _pageManager.setPage(Page::Login);
+}
+
+void HomePage::_bookDetailPopUpHandler(Book* book)
+{
+	_bookDetailPopUp.setBook(book);
+	_bookDetailPopUp.setPopUpVisiblity(true);
 }

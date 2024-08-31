@@ -14,6 +14,7 @@ class HomePage : public PageBase
 
 	protected:
 		void _logoutHandler();
+		void _bookDetailPopUpHandler(Book* book);
 
 	private:
 		sf::Texture _backgroundTexture;
@@ -28,4 +29,5 @@ class HomePage : public PageBase
 
 		SearchBar _searchBar;
 		BooksDisplayInRow _bookRowDisplay;
+		BookDetailPopUp _bookDetailPopUp;
 };

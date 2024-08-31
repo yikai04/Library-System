@@ -43,7 +43,7 @@ Book::~Book()
 
 }
 
-int Book::getId()
+int Book::getBookId()
 {
 	return _id;
 }
@@ -144,7 +144,7 @@ bool Book::getDelFlg()
 	return _delFlg;
 }
 
-void Book::setId(int id)
+void Book::setBookId(int id)
 {
 	_id = id;
 }

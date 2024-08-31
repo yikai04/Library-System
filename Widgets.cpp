@@ -135,6 +135,10 @@ void Button::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 		}
 
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+			if (_cursor.loadFromSystem(sf::Cursor::Arrow)) {
+				window.setMouseCursor(_cursor);
+				_cursorType = sf::Cursor::Arrow;
+			}
 			_onClickHandler();
 		}
 	}
@@ -767,6 +771,11 @@ void TextDisplay::setText(std::wstring text)
 	_textBox.setText(text);
 }
 
+void TextDisplay::setEditable(bool isEditable)
+{
+	_isEditable = isEditable;
+}
+
 std::wstring TextDisplay::getText()
 {
 	return _textBox.getText();
@@ -973,6 +982,11 @@ void TextDisplayDropDown::setText(std::wstring text)
 	_dropDown.setSelectOption(text);
 }
 
+void TextDisplayDropDown::setEditable(bool isEditable)
+{
+	_isEditable = isEditable;
+}
+
 std::wstring TextDisplayDropDown::getText()
 {
 	return _dropDown.getSelectedOption();
@@ -1132,9 +1146,9 @@ void PageNumber::render(sf::RenderWindow& window)
 
 
 
-BookDisplay::BookDisplay(sf::Vector2f bookCoverSize, sf::Vector2f position, const sf::Font& font, const int& fontSize, bool isVisible) :
-	_bookCover(bookCoverSize, position, "Icon/blankBook.jpg"),
-	_bookName(sf::Vector2f(bookCoverSize.x, 50), sf::Vector2f(position.x, position.y + bookCoverSize.y + 20.f), sf::Color::Transparent, L"书名", font, fontSize, fontSize, sf::Color::Black, sf::Color::Blue, []() {}),
+BookDisplay::BookDisplay(sf::Vector2f bookCoverSize, sf::Vector2f position, const sf::Font& font, const int& fontSize, bool isVisible, std::function<void()> onClickHandler) :
+	_bookCover(bookCoverSize, position, "Icon/blankBook.jpg", onClickHandler),
+	_bookName(sf::Vector2f(bookCoverSize.x, 50), sf::Vector2f(position.x, position.y + bookCoverSize.y + 20.f), sf::Color::Transparent, L"书名", font, fontSize, fontSize, sf::Color::Black, sf::Color::Blue, onClickHandler),
 	_isVisible(isVisible),
 	_book(NULL)
 {
@@ -1172,6 +1186,12 @@ void BookDisplay::setPosition(const sf::Vector2f& position)
 	_bookName.setPosition(sf::Vector2f(position.x, position.y + _bookCover.getSize().y + 20.f));
 }
 
+void BookDisplay::setOnClickHandler(std::function<void()> onClickHandler)
+{
+	_bookCover.setOnClickHandler(onClickHandler);
+	_bookName.setOnClickHandler(onClickHandler);
+}
+
 void BookDisplay::setVisiblity(bool isVisible)
 {
 	_isVisible = isVisible;
@@ -1195,7 +1215,7 @@ void BookDisplay::render(sf::RenderWindow& window)
 
 
 
-BooksDisplayInRow::BooksDisplayInRow(float postionY, const sf::Font& font) :
+BooksDisplayInRow::BooksDisplayInRow(float postionY, const sf::Font& font, std::function<void(Book*)> onClickHandler) :
 	_bookDisplay1(sf::Vector2f(200, 250), sf::Vector2f(260, postionY), font, 25),
 	_bookDisplay2(sf::Vector2f(200, 250), sf::Vector2f(560, postionY), font, 25),
 	_bookDisplay3(sf::Vector2f(200, 250), sf::Vector2f(860, postionY), font, 25),
@@ -1204,7 +1224,8 @@ BooksDisplayInRow::BooksDisplayInRow(float postionY, const sf::Font& font) :
 	_leftArrow(sf::Vector2f(70, 70), sf::Vector2f(70, postionY + 100.f), "Icon/leftSideArrowIcon.jpg", [&]() {this->switchLeftDisplay(); }),
 	_rightArrow(sf::Vector2f(70, 70), sf::Vector2f(1780, postionY + 100.f), "Icon/rightSideArrowIcon.jpg", [&]() {this->switchRightDisplay(); }),
 	_currentDisplayPage(0),
-	_maxBooksIndex(0)
+	_maxBooksIndex(0),
+	_onClickHandler(onClickHandler)
 {
 
 }
@@ -1218,7 +1239,7 @@ void BooksDisplayInRow::setBooks(std::vector<Book>&& books)
 {
 	_books = std::move(books);
 
-	_maxBooksIndex = _books.size() - 1;
+	_maxBooksIndex = _books.size();
 	_updateDisplay();
 }
 
@@ -1232,7 +1253,7 @@ void BooksDisplayInRow::handleEvent(const sf::Event& event, sf::RenderWindow& wi
 	if (_currentDisplayPage != 0) {
 		_leftArrow.handleEvent(event, window);
 	}
-	if (_currentDisplayPage * 5 + 5 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 5 + 5 < _maxBooksIndex) {
 		_rightArrow.handleEvent(event, window);
 	}
 }
@@ -1252,7 +1273,7 @@ void BooksDisplayInRow::render(sf::RenderWindow& window)
 	if (_currentDisplayPage != 0) {
 		_leftArrow.render(window);
 	}
-	if (_currentDisplayPage * 5 + 5 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 5 + 5 < _maxBooksIndex) {
 		_rightArrow.render(window);
 	}
 }
@@ -1267,6 +1288,12 @@ void BooksDisplayInRow::switchLeftDisplay()
 		_bookDisplay4.setBook(&_books[_currentDisplayPage * 5 + 3]);
 		_bookDisplay5.setBook(&_books[_currentDisplayPage * 5 + 4]);
 
+		_bookDisplay1.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 5]); });
+		_bookDisplay2.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 5 + 1]); });
+		_bookDisplay3.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 5 + 2]); });
+		_bookDisplay4.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 5 + 3]); });
+		_bookDisplay5.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 5 + 4]); });
+		
 		_bookDisplay1.setVisiblity(true);
 		_bookDisplay2.setVisiblity(true);
 		_bookDisplay3.setVisiblity(true);
@@ -1284,30 +1311,41 @@ void BooksDisplayInRow::switchRightDisplay()
 
 void BooksDisplayInRow::_updateDisplay()
 {
-	_bookDisplay1.setBook(&_books[_currentDisplayPage * 5]);
-	if (_currentDisplayPage * 5 + 1 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 5 < _maxBooksIndex) {
+		_bookDisplay1.setBook(&_books[_currentDisplayPage * 5]);
+		_bookDisplay1.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 5]); });
+		_bookDisplay1.setVisiblity(true);
+	}
+	else {
+		_bookDisplay1.setVisiblity(false);
+	}
+	if (_currentDisplayPage * 5 + 1 < _maxBooksIndex) {
 		_bookDisplay2.setBook(&_books[_currentDisplayPage * 5 + 1]);
+		_bookDisplay2.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 5 + 1]); });
 		_bookDisplay2.setVisiblity(true);
 	}
 	else {
 		_bookDisplay2.setVisiblity(false);
 	}
-	if (_currentDisplayPage * 5 + 2 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 5 + 2 < _maxBooksIndex) {
 		_bookDisplay3.setBook(&_books[_currentDisplayPage * 5 + 2]);
+		_bookDisplay3.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 5 + 2]); });
 		_bookDisplay3.setVisiblity(true);
 	}
 	else {
 		_bookDisplay3.setVisiblity(false);
 	}
-	if (_currentDisplayPage * 5 + 3 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 5 + 3 < _maxBooksIndex) {
 		_bookDisplay4.setBook(&_books[_currentDisplayPage * 5 + 3]);
+		_bookDisplay4.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 5 + 3]); });
 		_bookDisplay4.setVisiblity(true);
 	}
 	else {
 		_bookDisplay4.setVisiblity(false);
 	}
-	if (_currentDisplayPage * 5 + 4 <= _maxBooksIndex) {
+	if (_currentDisplayPage * 5 + 4 < _maxBooksIndex) {
 		_bookDisplay5.setBook(&_books[_currentDisplayPage * 5 + 4]);
+		_bookDisplay5.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 5 + 4]); });
 		_bookDisplay5.setVisiblity(true);
 	}
 	else {
@@ -1640,4 +1678,117 @@ void Table::_updateHeaders()
 		_headerButtons.push_back(headerButton);
 		positionX += _rowWidth[i];
 	}
+}
+
+BookDetailPopUp::BookDetailPopUp(const sf::Font& font, bool isPopUp, bool isEditable, std::function<void()> editFunction) :
+	_bookId(sf::Vector2f(300, 50), sf::Vector2f(1350, 300), font, 20, sf::Color::Transparent, L"书籍编号", L"", isEditable),
+	_bookName(sf::Vector2f(500, 100), sf::Vector2f(700, 300), font, 20, sf::Color::Transparent, L"书名", L"", isEditable),
+	_bookAuthor(sf::Vector2f(300, 100), sf::Vector2f(700, 420), font, 20, sf::Color::Transparent, L"作者", L"", isEditable),
+	_bookPublisher(sf::Vector2f(300, 100), sf::Vector2f(700, 540), font, 20, sf::Color::Transparent, L"出版社", L"", isEditable),
+	_publishDate(sf::Vector2f(300, 100), sf::Vector2f(700, 660), font, 20, sf::Color::Transparent, L"出版日期", L"", isEditable),
+	_bookCategory(sf::Vector2f(300, 100), sf::Vector2f(1200, 420), font, 20, sf::Color::Transparent, L"类别", { L"小说类", L"传记与回忆录", L"历史与文化", L"科学与自然", L"商业与经济", L"健康与生活方式", L"艺术与设计", L"语言与文学", L"参考手册", L"儿童读物", L"其他" }, isEditable),
+	_totalPage(sf::Vector2f(300, 100), sf::Vector2f(1200, 540), font, 20, sf::Color::Transparent, L"价格", L"", isEditable),
+	_bookPrice(sf::Vector2f(300, 100), sf::Vector2f(1200, 660), font, 20, sf::Color::Transparent, L"价格", L"", isEditable),
+	_bookAvailableStock(sf::Vector2f(300, 100), sf::Vector2f(700, 780), font, 20, sf::Color::Transparent, L"剩余量", L"", isEditable),
+	_bookTotalStock(sf::Vector2f(300, 100), sf::Vector2f(1200, 780), font, 20, sf::Color::Transparent, L"总量", L"", isEditable),
+	_bookDescription(sf::Vector2f(1200, 200), sf::Vector2f(300, 800), font, 20, sf::Color::Transparent, L"简述", L"", isEditable),
+	_bookImage(sf::Vector2f(200, 250), sf::Vector2f(250, 150), "Icon/blankBook.jpg"),
+	_closeButton(sf::Vector2f(100, 100), sf::Vector2f(1600, 120), "Icon/closeButton.png", [&]() {_closePopUp(); }),
+	_editFunction(editFunction)
+{
+	_mask.setSize(sf::Vector2f(1920, 1080));
+	_mask.setPosition(sf::Vector2f(0, 0));
+	_mask.setFillColor(sf::Color(200, 200, 200, 200));
+
+	_popup.setSize(sf::Vector2f(1500,800));
+	_popup.setPosition(sf::Vector2f(210, 120));
+	_popup.setFillColor(sf::Color(255, 255, 255, 255));
+}
+
+BookDetailPopUp::~BookDetailPopUp()
+{
+
+}
+
+void BookDetailPopUp::setBook(Book* book)
+{
+	_bookId.setText(std::to_wstring(book->getBookId()));
+	_bookName.setText(book->getBookName());
+	_bookAuthor.setText(book->getAuthor());
+	_bookPublisher.setText(book->getPublisher());
+	_bookCategory.setText(book->getCategoryName());
+	_publishDate.setText(book->getPublishDate().getWDate());
+	_bookPrice.setText(std::to_wstring(book->getPrice()));
+	_bookAvailableStock.setText(std::to_wstring(book->getRemainBook()));
+	_bookTotalStock.setText(std::to_wstring(book->getTotalBook()));
+	_bookDescription.setText(book->getDescription());
+	_bookImage.setIcon(book->getImgUrl());
+}
+
+void BookDetailPopUp::setPopUpVisiblity(bool isVisible)
+{
+	_isPopUp = isVisible;
+}
+
+void BookDetailPopUp::setEditable(bool isEditable)
+{
+	_bookId.setEditable(isEditable);
+	_bookName.setEditable(isEditable);
+	_bookAuthor.setEditable(isEditable);
+	_bookPublisher.setEditable(isEditable);
+	_bookCategory.setEditable(isEditable);
+	_publishDate.setEditable(isEditable);
+	_bookPrice.setEditable(isEditable);
+	_bookAvailableStock.setEditable(isEditable);
+	_bookTotalStock.setEditable(isEditable);
+	_bookDescription.setEditable(isEditable);
+}
+
+bool BookDetailPopUp::getPopUpVisiblity()
+{
+	return _isPopUp;
+}
+
+void BookDetailPopUp::handleEvent(const sf::Event& event, sf::RenderWindow& window)
+{
+	if (_isPopUp) {
+		_bookId.handleEvent(event, window);
+		_bookName.handleEvent(event, window);
+		_bookAuthor.handleEvent(event, window);
+		_bookPublisher.handleEvent(event, window);
+		_bookCategory.handleEvent(event, window);
+		_publishDate.handleEvent(event, window);
+		_bookPrice.handleEvent(event, window);
+		_bookAvailableStock.handleEvent(event, window);
+		_bookTotalStock.handleEvent(event, window);
+		_bookDescription.handleEvent(event, window);
+		_bookImage.handleEvent(event, window);
+		_closeButton.handleEvent(event, window);
+	}
+}
+
+void BookDetailPopUp::render(sf::RenderWindow& window)
+{
+	if (_isPopUp) {
+		window.draw(_mask);
+		window.draw(_popup);
+		_bookId.render(window);
+		_bookName.render(window);
+		_bookAuthor.render(window);
+		_bookPublisher.render(window);
+		_bookCategory.render(window);
+		_publishDate.render(window);
+		_bookPrice.render(window);
+		_bookAvailableStock.render(window);
+		_bookTotalStock.render(window);
+		_bookDescription.render(window);
+		_bookImage.render(window);
+		_closeButton.render(window);
+	}
+}
+
+void BookDetailPopUp::_closePopUp()
+{
+	_isPopUp = false;
+	_editFunction();
 }

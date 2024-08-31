@@ -237,7 +237,7 @@ Book User::getBookInfoById(int id)
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_ROW) {
 		Book book;
-		book.setId(sqlite3_column_int(stmt, 0));
+		book.setBookId(sqlite3_column_int(stmt, 0));
 		book.setBookName(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 1)));
 		book.setAuthor(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 2)));
 		book.setPublisher(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 3)));
@@ -309,7 +309,7 @@ std::vector<Book> User::searchBooksInfo(std::wstring searchWord, const std::wstr
 	rc = sqlite3_step(stmt);
 	while (rc == SQLITE_ROW) {
 		Book book;
-		book.setId(sqlite3_column_int(stmt, 0));
+		book.setBookId(sqlite3_column_int(stmt, 0));
 		book.setBookName(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 1)));
 		book.setAuthor(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 2)));
 		book.setPublisher(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 3)));
@@ -380,7 +380,7 @@ std::vector<Book> User::searchBooksInfoByName(std::wstring bookName, const std::
 	rc = sqlite3_step(stmt);
 	while (rc == SQLITE_ROW) {
 		Book book;
-		book.setId(sqlite3_column_int(stmt, 0));
+		book.setBookId(sqlite3_column_int(stmt, 0));
 		book.setBookName(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 1)));
 		book.setAuthor(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 2)));
 		book.setPublisher(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 3)));
@@ -451,7 +451,7 @@ std::vector<Book> User::searchBooksInfoByAuthor(std::wstring author, const std::
 	rc = sqlite3_step(stmt);
 	while (rc == SQLITE_ROW) {
 		Book book;
-		book.setId(sqlite3_column_int(stmt, 0));
+		book.setBookId(sqlite3_column_int(stmt, 0));
 		book.setBookName(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 1)));
 		book.setAuthor(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 2)));
 		book.setPublisher(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 3)));
@@ -522,7 +522,7 @@ std::vector<Book> User::searchBooksInfoByPublisher(std::wstring publisher, const
 	rc = sqlite3_step(stmt);
 	while (rc == SQLITE_ROW) {
 		Book book;
-		book.setId(sqlite3_column_int(stmt, 0));
+		book.setBookId(sqlite3_column_int(stmt, 0));
 		book.setBookName(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 1)));
 		book.setAuthor(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 2)));
 		book.setPublisher(std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 3)));
