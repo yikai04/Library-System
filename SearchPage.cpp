@@ -70,7 +70,7 @@ void SearchPage::render(sf::RenderWindow& window)
 
 void SearchPage::onEnter()
 {
-	if (_user.getUserType() != UserType::Guest) {
+	if (_user.getSelfUserInfo().getRole() != UserType::Guest) {
 		_topBarButton6.setText(L"登出");
 		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
 	}

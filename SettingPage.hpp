@@ -15,13 +15,14 @@ class SettingPage : public PageBase
     protected:
         void _logoutHandler();
         void _showUserInfo();
+		void _deleteAccountHandler();
 		bool _updateUsername();
 		bool _updateEmail();
 		bool _updateName();
 		bool _updateId();
 		bool _updateGender();
 		bool _updateRole();
-		bool _updatePassword();
+		void _updatePassword();
 
     private:
         sf::Texture _backgroundTexture;
@@ -39,8 +40,10 @@ class SettingPage : public PageBase
         TextDisplay _name;
         TextDisplay _id;
         TextDisplay _registerDate;
-        DropDown _gender;
-		DropDown _role;
+        TextDisplayDropDown _gender;
+		TextDisplayDropDown _role;
 		TextBox _password;
 		TextBox _confirmPassword;
+		IconButton _changePasswordButton;
+		TextToogleButton _deleteAccountButton;
 };

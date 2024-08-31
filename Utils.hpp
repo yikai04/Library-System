@@ -2,10 +2,15 @@
 
 #define LOGIN_SUCESSFUL 0
 #define INVALID_USERNAME 1
-#define WRONG_PASSWORD 2
-#define SQLITE_DATABASE_ERROR 3
+#define INVALID_ID 2
+#define INVALID_EMAIL 3
+#define INVALID_NAME 4
+#define WRONG_PASSWORD 5
+#define SQLITE_DATABASE_ERROR 6
+#define REGISTER_SUCESSFUL 7
 
 #include "Dependencies/sqlite3/sqlite3.h"
+#include "Dependencies/Bcrypt/BCrypt.hpp"
 #include <string>
 #include "Config.h"
 
@@ -59,18 +64,56 @@ bool insertDatas(const char* filename);
 //std::string wstringToString(std::wstring wstr);
 std::string wstring_to_string(const std::wstring& wstr);
 
-class Date
-{
+std::string hashPassword(const std::string& password);
+bool validatePassword(const std::string& password, const std::string& hash);
+
+//class Date
+//{
+//	public:
+//		Date();
+//		Date(const Date& date);
+//		Date(std::string date);
+//		Date(std::wstring date);
+//		Date operator=(const Date& date);
+//		~Date();
+//		
+//		void setDate(std::string date);
+//		void setDate(std::wstring date);
+//		void setTodatyDate();
+//		void addDays(int days);
+//
+//		std::string getDate();
+//		std::wstring getWDate();
+//		int getYear();
+//		int getMonth();
+//		int getDay();
+//
+//	private:
+//		void _stringToDate(std::string date);
+//		void _stringToDate(std::wstring date);
+//		std::string _dateToString();
+//		std::wstring _dateToWString();
+//		int _year;
+//		int _month;
+//		int _day;
+//};
+
+class Date {
 	public:
 		Date();
 		Date(const Date& date);
 		Date(std::string date);
 		Date(std::wstring date);
-		Date operator=(const Date& date);
+		Date& operator=(const Date& date);
 		~Date();
+
 		void setDate(std::string date);
 		void setDate(std::wstring date);
-		void setTodatyDate();
+		void setTodayDate();
+		void addDays(int days);
+		void addMonths(int months);
+		void addYears(int years);
+
 		std::string getDate();
 		std::wstring getWDate();
 		int getYear();
@@ -78,11 +121,11 @@ class Date
 		int getDay();
 
 	private:
-		void _stringToDate(std::string date);
-		void _stringToDate(std::wstring date);
-		std::string _dateToString();
-		std::wstring _dateToWString();
-		int _year;
-		int _month;
-		int _day;
+		std::tm dateStruct;
+		bool isNullDate;
+		void parseDateString(const std::string& date);
+		void parseWDateString(const std::wstring& date);
+		std::string formatDate(const std::tm& tm);
+		std::wstring formatWDate(const std::tm& tm);
+		int daysInMonth(int year, int month);
 };

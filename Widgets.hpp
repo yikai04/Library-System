@@ -129,7 +129,7 @@ class TextBox
 
 		sf::RectangleShape _caret;
 		bool _caretVisible;
-		int _caretPosition;
+		unsigned int _caretPosition;
 		sf::Time _caretTimer;
 
 		bool _isActivated;
@@ -165,12 +165,13 @@ class TextDisplay
 class DropDown
 {
 	public:
-		DropDown(sf::Vector2f size, sf::Vector2f position, const sf::Color& backgroundColor, const sf::Font& font, const int& fontSize, const std::wstring defaultOption = L"");
+		DropDown(sf::Vector2f size, sf::Vector2f position, const sf::Color& backgroundColor, const sf::Font& font, const int& fontSize, const std::wstring defaultOption = L"", bool isActivate = true);
 		~DropDown();
 		void setOptions(std::vector<std::wstring> options);
 		bool isDropDownVisible();
 		void setDropDownVisible(bool isVisible);
 		void setSelectOption(const std::wstring& option);
+		void setActivate(bool isActivate);
 		std::wstring getSelectedOption();
 		bool getVisibility();
 		void dropDownButtonOnClickHandler();
@@ -186,9 +187,32 @@ class DropDown
 		std::vector<std::wstring> _options;
 		std::vector<TextToogleButton*> _optionButtons;
 		bool _isDropDownVisible;
+		bool _isActivate;
 		sf::Font _font;
 		int _fontSize;
 		sf::Color _backgroundColor;
+};
+
+class TextDisplayDropDown
+{
+	public:
+		TextDisplayDropDown(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, sf::Color backgroundColor = sf::Color::White, const std::wstring text = L"", std::vector<std::wstring> options = {L""}, bool isEditable = false, std::function<bool()> editHandler = []() {return true; });
+		~TextDisplayDropDown();
+		void setText(std::wstring text);
+		std::wstring getText();
+		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
+		void update(sf::Time dt);
+		void render(sf::RenderWindow& window);
+
+
+	protected:
+		void _editButtonOnClickHandler();
+		void _tickButtonOnClickHandler();
+		DropDown _dropDown;
+		IconButton _editButton;
+		bool _isEditable;
+		bool _isEditing;
+		std::function<bool()> _editHandler;
 };
 
 class SearchBar : public TextBox

@@ -12,7 +12,7 @@ RecordsPage::RecordsPage(User& user, PageManager& pageManager) :
 	_topBarButton5(sf::Vector2f(150, 70), sf::Vector2f(1480, 80), sf::Color::Transparent, L"用户设置", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Setting); }),
 	_topBarButton6(sf::Vector2f(100, 70), sf::Vector2f(1680, 80), sf::Color::Transparent, L"登录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Login); }),
 
-	_table(sf::Vector2f(1650,600), sf::Vector2f(130,200), _font, 30, {L"序号", L"书名", L"借书日期", L"归还日期", L"备注"}, {150.f, 600.f, 250.f, 250.f, 400.f}, 100.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128))
+	_table(sf::Vector2f(1650,600), sf::Vector2f(130,200), _font, 30, {L"序号", L"书名", L"借书日期", L"应归还日期", L"归还日期"}, {140.f, 700.f, 280.f, 280.f, 280.f}, 100.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128))
 {
 	_backgroundTexture.loadFromFile("Image/Background(1920x1080).png");
 
@@ -20,8 +20,6 @@ RecordsPage::RecordsPage(User& user, PageManager& pageManager) :
 	_sprite.setPosition(0, 0);
 	_sprite.setTexture(_backgroundTexture);
 
-	//_table.setRows({ { L"1", L"书名1", L"2020-01-01", L"2020-01-02", L"备注1" }, { L"2", L"书名2", L"2020-01-01", L"2020-01-02", L"备注2" }, { L"3", L"书名3", L"2020-01-01", L"2020-01-02", L"备注3" } });
-	
 }
 
 RecordsPage::~RecordsPage()
@@ -66,7 +64,7 @@ void RecordsPage::onEnter()
 {
 	_showBorrowRecords();
 
-	if (_user.getUserType() != UserType::Guest) {
+	if (_user.getSelfUserInfo().getRole() != UserType::Guest) {
 		_topBarButton6.setText(L"登出");
 		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
 	}
@@ -74,18 +72,18 @@ void RecordsPage::onEnter()
 
 void RecordsPage::_showBorrowRecords()
 {
-	if (_user.getUserType() == UserType::Admin) {
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
 		//show all records
 	}
-	else if (_user.getUserType() == UserType::Student || _user.getUserType() == UserType::Teacher) {
+	else if (_user.getSelfUserInfo().getRole() == UserType::Student || _user.getSelfUserInfo().getRole() == UserType::Teacher) {
 		//show records of current user
-		std::vector<BorrowBookDetail> borrowBookDetailList = _user.getBorrowedBooks();
+		std::vector<BorrowBookDetail> borrowBookDetailList = _user.getSelfUserInfo().getBorrowedBooks();
 		std::vector<std::vector<std::wstring>> rows;
 		std::vector<Book> books;
 
-		for (int i = 0; i < borrowBookDetailList.size(); i++) {
+		for (size_t i = 0; i < borrowBookDetailList.size(); i++) {
 			Book book = _user.getBookInfoById(borrowBookDetailList[i].getBookId());
-			rows.push_back({ std::to_wstring(i + 1), book.getBookName(), borrowBookDetailList[i].getBorrowDate().getWDate(), borrowBookDetailList[i].getReturnDate().getWDate(), L""});
+			rows.push_back({ std::to_wstring(i + 1), book.getBookName(), borrowBookDetailList[i].getBorrowDate().getWDate(), borrowBookDetailList[i].getDueDate().getWDate(), borrowBookDetailList[i].getReturnDate().getWDate() });
 			books.push_back(book);
 		}
 		_table.setRows(std::move(rows), std::move(books));

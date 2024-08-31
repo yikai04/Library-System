@@ -5,10 +5,9 @@
 #include "Utils.hpp"
 
 User::User() :
-	_window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Library Management System", sf::Style::Default),
-	_userType(UserType::Guest),
+	_window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Library Management System", sf::Style::Titlebar | sf::Style::Close),
 	_pageManager(*this),
-	_userId(-1)
+	_userInfo(UserInfo())
 {
 	_window.setPosition(sf::Vector2i((sf::VideoMode::getDesktopMode().width - WINDOW_WIDTH) >> 1, (sf::VideoMode::getDesktopMode().height - WINDOW_HEIGHT) >> 1));
 }
@@ -26,6 +25,13 @@ void User::run()
             if (event.type == sf::Event::Closed) {
                 _window.close();
             }
+
+			if (event.type == sf::Event::Resized)
+			{
+				// update the view to the new size of the window
+				sf::FloatRect visibleArea(0, 0, event.size.width, event.size.height);
+				_window.setView(sf::View(visibleArea));
+			}
 
             _pageManager.handleEvent(event, _window);
         }
@@ -62,13 +68,10 @@ int User::login(std::wstring username, std::wstring password)
 	while (rc == SQLITE_ROW) {
 		int delFlg = sqlite3_column_int(stmt, 8);
 		if (!delFlg) {
-			std::wstring truthPassword = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 3));
-			if (password == truthPassword) {
-				_userId = sqlite3_column_int(stmt, 0);
-				_setUserType(std::string((const char*)sqlite3_column_text(stmt, 4)));
+			std::string truthPassword = std::string((const char*)sqlite3_column_text(stmt, 3));
+			if (validatePassword(wstring_to_string(password), truthPassword)) {
+				_userInfo.setUserId(sqlite3_column_int(stmt, 0));
 				sqlite3_finalize(stmt);
-
-				_setUserDetail();
 				return LOGIN_SUCESSFUL;
 			}
 			else {
@@ -86,118 +89,80 @@ int User::login(std::wstring username, std::wstring password)
 
 void User::logout()
 {
-	_userType = UserType::Guest;
-	_userId = -1;
+	_userInfo.setUserId(-1);
 }
 
-UserType User::getUserType()
+UserInfo& User::getSelfUserInfo()
 {
-	return _userType;
+	return _userInfo;
 }
 
-std::wstring User::getId()
+void User::deleteAccount(UserInfo& user)
 {
-	return std::to_wstring(_userId);
+	const char* sql = "UPDATE user_info SET del_flg = 1 WHERE id = ?";
+	int rc;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return;
+	}
+
+	rc = sqlite3_bind_int(stmt, 1, user.getUserId());
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return;
+	}
+
+	rc = sqlite3_step(stmt);
+	if (rc == SQLITE_DONE) {
+		sqlite3_finalize(stmt);
+		user.setUserId(-1);
+	}
+	else {
+		sqlite3_finalize(stmt);
+	}
 }
 
-std::wstring User::getUsername()
+int User::registerAccount(std::wstring username, std::wstring password, std::wstring email, std::wstring name, std::wstring id, std::wstring role, std::wstring gender)
 {
-	return _username;
-}
+	if (!UserInfo::checkUsernameValidaty(username)) {
+		return INVALID_USERNAME;
+	}
+	std::string usernameStr = wstring_to_string(username);
 
-std::wstring User::getName()
-{
-	return _name;
-}
+	int idInt = std::stoi(wstring_to_string(id));
+	if (!UserInfo::checkIdValidaty(idInt)) {
+		return INVALID_ID;
+	}
 
-Date User::getRegisterDate()
-{
-	return _registerDate;
-}
-
-std::wstring User::getEmail()
-{
-	return _email;
-}
-
-std::wstring User::getGender()
-{
-	return _gender;
-}
-
-bool User::changeEmail(std::wstring email)
-{
 	std::regex emailPattern("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$");
 	std::string emailStr = wstring_to_string(email);
 	if (!std::regex_match(emailStr, emailPattern)) {
-		return false;
+		return INVALID_EMAIL;
 	}
 
-	const char* sql = "UPDATE user_info SET email = ? WHERE id = ?";
-	int rc;
-	sqlite3_stmt* stmt;
-	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
-	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
-		sqlite3_finalize(stmt);
-		return false;
+	if (name == L"") {
+		return INVALID_NAME;
 	}
-
-	rc = sqlite3_bind_text(stmt, 1, emailStr.c_str(), -1, SQLITE_STATIC);
-	rc = sqlite3_bind_int(stmt, 2, _userId);
-	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
-		sqlite3_finalize(stmt);
-		return false;
-	}
-
-	rc = sqlite3_step(stmt);
-	if (rc == SQLITE_DONE) {
-		_email = email;
-		sqlite3_finalize(stmt);
-		return true;
-	}
-	else {
-		sqlite3_finalize(stmt);
-		return false;
-	}
-}
-
-bool User::changeName(std::wstring name)
-{
-	const char* sql = "UPDATE user_info SET name = ? WHERE id = ?";
-	int rc;
-	sqlite3_stmt* stmt;
-	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
-	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
-		sqlite3_finalize(stmt);
-		return false;
-	}
-
 	std::string nameStr = wstring_to_string(name);
-	rc = sqlite3_bind_text(stmt, 1, nameStr.c_str(), -1, SQLITE_STATIC);
-	rc = sqlite3_bind_int(stmt, 2, _userId);
-	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
-		sqlite3_finalize(stmt);
-		return false;
-	}
 
-	rc = sqlite3_step(stmt);
-	if (rc == SQLITE_DONE) {
-		_name = name;
-		sqlite3_finalize(stmt);
-		return true;
+	std::string roleStr;
+	if (role == L"学生") {
+		roleStr = "Student";
+	}
+	else if (role == L"教师") {
+		roleStr = "Teacher";
+	}
+	else if (role == L"管理员") {
+		roleStr = "Admin";
 	}
 	else {
-		sqlite3_finalize(stmt);
-		return false;
+		roleStr = "Student";
 	}
-}
 
-bool User::setGender(std::wstring gender)
-{
 	std::string genderStr;
 	if (gender == L"男") {
 		genderStr = "M";
@@ -206,36 +171,47 @@ bool User::setGender(std::wstring gender)
 		genderStr = "F";
 	}
 	else {
-		return false;
+		genderStr = "M";
 	}
 
-	const char* sql = "UPDATE user_info SET gender = ? WHERE id = ?";
+	const char* sql = "INSERT INTO user_info (id, name, username, password, role, register_date, gender, email, del_flg) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	int rc;
 	sqlite3_stmt* stmt;
 	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
 		sqlite3_finalize(stmt);
-		return false;
+		return SQLITE_DATABASE_ERROR;
 	}
 
-	rc = sqlite3_bind_text(stmt, 1, genderStr.c_str(), -1, SQLITE_STATIC);
-	rc = sqlite3_bind_int(stmt, 2, _userId);
+	std::string passwordStr = hashPassword(wstring_to_string(password));
+	Date todayDate;
+	todayDate.setTodayDate();
+
+	rc = sqlite3_bind_int(stmt, 1, idInt);
+	rc = sqlite3_bind_text(stmt, 2, nameStr.c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text(stmt, 3, usernameStr.c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text(stmt, 4, passwordStr.c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text(stmt, 5, roleStr.c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text(stmt, 6, todayDate.getDate().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text(stmt, 7, genderStr.c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text(stmt, 8, emailStr.c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_int(stmt, 9, 0);
+
 	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		std::cerr << "Failed to bind: " << sqlite3_errmsg(mDatabase) << std::endl;
 		sqlite3_finalize(stmt);
-		return false;
+		return SQLITE_DATABASE_ERROR;
 	}
 
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_DONE) {
-		_gender = gender;
 		sqlite3_finalize(stmt);
-		return true;
+		return REGISTER_SUCESSFUL;
 	}
 	else {
 		sqlite3_finalize(stmt);
-		return false;
+		return SQLITE_DATABASE_ERROR;
 	}
 }
 
@@ -570,88 +546,87 @@ std::vector<Book> User::searchBooksInfoByPublisher(std::wstring publisher, const
 	return books;
 }
 
-std::vector<BorrowBookDetail> User::getBorrowedBooks()
+bool User::borrowBook(int userId, int bookId)
 {
-	const char* sql = "SELECT * FROM borrow_info WHERE user_id = ?";
-	int rc;
-	std::vector<BorrowBookDetail> borrowBookDetailList;
-	sqlite3_stmt* stmt;
-	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
-	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
-		sqlite3_finalize(stmt);
-		return borrowBookDetailList;
-	}
-
-	rc = sqlite3_bind_int(stmt, 1, _userId);
-	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
-		sqlite3_finalize(stmt);
-		return borrowBookDetailList;
-	}
-
-	rc = sqlite3_step(stmt);
-	while (rc == SQLITE_ROW) {
-		BorrowBookDetail borrowBookDetail;
-		borrowBookDetail.setId(sqlite3_column_int(stmt, 0));
-		borrowBookDetail.setBookId(sqlite3_column_int(stmt, 1));
-		borrowBookDetail.setUserId(sqlite3_column_int(stmt, 2));
-		borrowBookDetail.setBorrowDate(std::string((const char*)sqlite3_column_text(stmt, 3)));
-		borrowBookDetail.setDueDate(std::string((const char*)sqlite3_column_text(stmt, 4)));
-		borrowBookDetail.setReturnDate(std::string((const char*)sqlite3_column_text(stmt, 5)));
-
-		borrowBookDetailList.push_back(borrowBookDetail);
-
-		rc = sqlite3_step(stmt);
-	}
-
-	sqlite3_finalize(stmt);
-	return borrowBookDetailList;
-}
-
-
-
-void User::_setUserType(std::string type)
-{
-	if (type == "Student") {
-		_userType = UserType::Student;
-	}
-	else if (type == "Teacher") {
-		_userType = UserType::Teacher;
-	}
-	else if (type == "Admin") {
-		_userType = UserType::Admin;
-	}
-	else if (type == "Guest") {
-		_userType = UserType::Guest;
-	}
-}
-
-void User::_setUserDetail()
-{
-	const char* sql = "SELECT * FROM user_info WHERE id = ?";
+	const char* sql = "INSERT INTO borrow_info (book_id, user_id, borrow_date, due_date) VALUES (?, ?, ?, ?)";
 	int rc;
 	sqlite3_stmt* stmt;
 	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
 		sqlite3_finalize(stmt);
-		return;
+		return false;
 	}
 
-	rc = sqlite3_bind_int(stmt, 1, _userId);
+	Date todayDate;
+	todayDate.setTodayDate();
+	Date dueDate;
+	dueDate.setTodayDate();
+	UserInfo user(userId);
+	if (user.getRole() == UserType::Student) {
+		dueDate.addMonths(1);
+	}
+	else if (user.getRole() == UserType::Teacher) {
+		dueDate.addMonths(3);
+	}
+	else if (user.getRole() == UserType::Admin) {
+		dueDate.addMonths(6);
+	}
+	else {
+		return false;
+	}
+
+	rc = sqlite3_bind_int(stmt, 1, bookId);
+	rc = sqlite3_bind_int(stmt, 2, userId);
+	rc = sqlite3_bind_text(stmt, 3, todayDate.getDate().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text(stmt, 4, dueDate.getDate().c_str(), -1, SQLITE_STATIC);
 	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		std::cerr << "Failed to bind: " << sqlite3_errmsg(mDatabase) << std::endl;
 		sqlite3_finalize(stmt);
-		return;
+		return false;
 	}
 
 	rc = sqlite3_step(stmt);
-	if (rc == SQLITE_ROW) {
-		_name = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 1));
-		_username = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 2));
-		_registerDate = Date(std::string((const char*)sqlite3_column_text(stmt, 5)));
-		_gender = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 6));
-		_email = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 7));
+	if (rc == SQLITE_DONE) {
+		sqlite3_finalize(stmt);
+		return true;
+	}
+	else {
+		sqlite3_finalize(stmt);
+		return false;
+	}
+}
+
+bool User::returnBook(int bookId)
+{
+	const char* sql = "UPDATE borrow_info SET return_date = ? WHERE book_id = ?";
+	int rc;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	Date todayDate;
+	todayDate.setTodayDate();
+
+	rc = sqlite3_bind_text(stmt, 1, todayDate.getDate().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_int(stmt, 2, bookId);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to bind: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	rc = sqlite3_step(stmt);
+	if (rc == SQLITE_DONE) {
+		sqlite3_finalize(stmt);
+		return true;
+	}
+	else {
+		sqlite3_finalize(stmt);
+		return false;
 	}
 }

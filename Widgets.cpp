@@ -637,7 +637,7 @@ void TextBox::_displayString()
 			_lineLength.clear();
 			_lineLength.push_back(0);
 			int lineLengthIndex = 0;
-			for (int i = 0; i < _inputString.size(); i++) {
+			for (size_t i = 0; i < _inputString.size(); i++) {
 				_inputText.setString(_inputText.getString() + _inputString[i]);
 				_inputTextLenCounter.setString(_inputTextLenCounter.getString() + _inputString[i]);
 				_lineLength[lineLengthIndex]++;
@@ -652,7 +652,7 @@ void TextBox::_displayString()
 	}
 	else {
 		_inputText.setString("");
-		for (int i = 0; i < _inputString.size(); i++) {
+		for (size_t i = 0; i < _inputString.size(); i++) {
 			_inputText.setString(_inputText.getString() + "*");
 		}
 	}
@@ -816,15 +816,18 @@ void TextDisplay::_tickButtonOnClickHandler()
 
 
 
-DropDown::DropDown(sf::Vector2f size, sf::Vector2f position, const sf::Color& backgroundColor, const sf::Font& font, const int& fontSize, const std::wstring defaultOption) :
-	_dropDownButton(size, position, backgroundColor, defaultOption + L"▼", font, fontSize, sf::Color::Black, [&]() {this->dropDownButtonOnClickHandler(); }),
+DropDown::DropDown(sf::Vector2f size, sf::Vector2f position, const sf::Color& backgroundColor, const sf::Font& font, const int& fontSize, const std::wstring defaultOption, bool isActivate) :
+	_dropDownButton(size, position, backgroundColor, defaultOption, font, fontSize, sf::Color::Black, [&]() {this->dropDownButtonOnClickHandler(); }),
 	_selectedOption(defaultOption),
 	_isDropDownVisible(false),
+	_isActivate(isActivate),
 	_font(font),
 	_fontSize(fontSize),
 	_backgroundColor(backgroundColor)
 {
-
+	if (_isActivate) {
+		_dropDownButton.setText(defaultOption + L"▼");
+	}
 }
 
 DropDown::~DropDown()
@@ -855,10 +858,26 @@ void DropDown::setSelectOption(const std::wstring& option)
 {
 
 	_selectedOption = option;
-	_dropDownButton.setText(option + L"▼");
+	if (_isActivate) {
+		_dropDownButton.setText(option + L"▼");
+	}
+	else {
+		_dropDownButton.setText(option);
+	}
 
 	_deleteOptionButtons();
 	_createOptionButtons();
+}
+
+void DropDown::setActivate(bool isActivate)
+{
+	_isActivate = isActivate;
+	if (_isActivate) {
+		_dropDownButton.setText(_selectedOption + L"▼");
+	}
+	else {
+		_dropDownButton.setText(_selectedOption);
+	}
 }
 
 std::wstring DropDown::getSelectedOption()
@@ -913,7 +932,7 @@ void DropDown::_createOptionButtons()
 {
 	//_optionButtons.clear();
 	int positionIndex = 1;
-	for (int i = 0; i < _options.size(); i++) {
+	for (size_t i = 0; i < _options.size(); i++) {
 		if (_options[i] != _selectedOption) {
 			std::wstring text(_options[i]);
 			TextToogleButton* optionButton = new TextToogleButton(_dropDownButton.getSize(), sf::Vector2f(_dropDownButton.getPosition().x, _dropDownButton.getPosition().y + _dropDownButton.getSize().y * positionIndex), _backgroundColor, text, _font, _fontSize, _fontSize, sf::Color::Black, sf::Color(203, 140, 63, 255), [=]() {this->optionButtonOnClickHandler(text); }, false);
@@ -932,6 +951,73 @@ void DropDown::_deleteOptionButtons()
 	}
 }
 
+
+
+TextDisplayDropDown::TextDisplayDropDown(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, sf::Color backgroundColor, const std::wstring text, std::vector<std::wstring> options, bool isEditable, std::function<bool()> editHandler) :
+	_dropDown(size, position, backgroundColor, font, fontSize, text, false),
+	_editButton(sf::Vector2f(50.f, 50.f), sf::Vector2f(position.x + size.x, position.y), "Icon/editIcon.png", [&]() {_editButtonOnClickHandler(); }),
+	_isEditable(isEditable),
+	_isEditing(false),
+	_editHandler(editHandler)
+{
+	_dropDown.setOptions(options);
+}
+
+TextDisplayDropDown::~TextDisplayDropDown()
+{
+
+}
+
+void TextDisplayDropDown::setText(std::wstring text)
+{
+	_dropDown.setSelectOption(text);
+}
+
+std::wstring TextDisplayDropDown::getText()
+{
+	return _dropDown.getSelectedOption();
+}
+
+void TextDisplayDropDown::handleEvent(const sf::Event& event, sf::RenderWindow& window)
+{
+	if (_isEditable) {
+		_editButton.handleEvent(event, window);
+		if (_isEditing) {
+			_dropDown.handleEvent(event, window);
+		}
+	}
+}
+
+void TextDisplayDropDown::update(sf::Time dt)
+{
+	
+}
+
+void TextDisplayDropDown::render(sf::RenderWindow& window)
+{
+	_dropDown.render(window);
+	if (_isEditable) {
+		_editButton.render(window);
+	}
+}
+
+void TextDisplayDropDown::_editButtonOnClickHandler()
+{
+	_isEditing = true;
+	_dropDown.setActivate(true);
+	_editButton.setIcon("Icon/tickIcon.png");
+	_editButton.setOnClickHandler([&]() {_tickButtonOnClickHandler(); });
+}
+
+void TextDisplayDropDown::_tickButtonOnClickHandler()
+{
+	if (_editHandler()) {
+		_isEditing = false;
+		_dropDown.setActivate(false);
+		_editButton.setIcon("Icon/editIcon.png");
+		_editButton.setOnClickHandler([&]() {_editButtonOnClickHandler(); });
+	}
+}
 
 
 
@@ -1494,7 +1580,7 @@ Table::_row::_row(sf::Vector2f position, const sf::Font& font, const int& fontSi
 	_rowHeight(rowHeight)
 {
 	float positionX = position.x;
-	for (int i = 0; i < _rowData.size(); i++) {
+	for (size_t i = 0; i < _rowData.size(); i++) {
 		TextToogleButton* colomnButton = new TextToogleButton(sf::Vector2f(_rowWidth[i], _rowHeight), sf::Vector2f(positionX, position.y), backgroundColor, _rowData[i], font, fontSize, fontSize, sf::Color::Black, sf::Color::Black, [&]() {}, false);
 		_rowButtons.push_back(colomnButton);
 		positionX += _rowWidth[i];
@@ -1533,7 +1619,7 @@ void Table::_updateRows()
 	}
 
 	float positionY = _position.y + _rowHeight;
-	for (int i = 0; i < _rowsData.size(); i++) {
+	for (size_t i = 0; i < _rowsData.size(); i++) {
 		_row* row = new _row(sf::Vector2f(_position.x, positionY), _font, _fontSize, _rowsData[i], _rowWidth, _rowHeight, i % 2 == 0 ? _rowColor1 : _rowColor2);
 		_rowDisplay.push_back(row);
 		positionY += _rowHeight;
@@ -1549,7 +1635,7 @@ void Table::_updateHeaders()
 	}
 
 	float positionX = _position.x;
-	for (int i = 0; i < _headers.size(); i++) {
+	for (size_t i = 0; i < _headers.size(); i++) {
 		TextToogleButton* headerButton = new TextToogleButton(sf::Vector2f(_rowWidth[i], _rowHeight), sf::Vector2f(positionX, _position.y), _headerColor, _headers[i], _font, _fontSize, _fontSize, sf::Color::Black, sf::Color::Black, [&]() {}, false);
 		_headerButtons.push_back(headerButton);
 		positionX += _rowWidth[i];

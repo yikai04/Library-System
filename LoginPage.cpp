@@ -80,7 +80,7 @@ void LoginPage::_loginHandler()
 	int status = _user.login(_username.getText(), _password.getText());
     
     if (status == LOGIN_SUCESSFUL) {
-		if (_pageManager.getLastPage() != Page::Login)
+		if (_pageManager.getLastPage() != Page::Login && _pageManager.getLastPage() != Page::Signup)
 			_pageManager.setPage(_pageManager.getLastPage());
 		else
 			_pageManager.setPage(Page::Home);

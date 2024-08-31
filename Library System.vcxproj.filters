@@ -84,6 +84,9 @@
     <ClInclude Include="SignupPage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UserInfo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -150,6 +153,9 @@
       <Filter>Resource Files</Filter>
     </ClCompile>
     <ClCompile Include="SignupPage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UserInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

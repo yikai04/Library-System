@@ -96,7 +96,7 @@ void SignupPage::render(sf::RenderWindow& window)
 
 void SignupPage::onEnter()
 {
-	if (_user.getUserType() != UserType::Guest) {
+	if (_user.getSelfUserInfo().getRole() != UserType::Guest) {
 		_topBarButton6.setText(L"登出");
 		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
 	}
@@ -112,5 +112,36 @@ void SignupPage::_logoutHandler()
 
 void SignupPage::_signupHandler()
 {
+	if (_password.getText() != _confirmPassword.getText()) {
 
+	}
+	int status = _user.registerAccount(
+		_username.getText(),
+		_password.getText(),
+		_email.getText(),
+		_name.getText(),
+		_id.getText(),
+		_role.getSelectedOption(),
+		_gender.getSelectedOption()
+	);
+	if (status == REGISTER_SUCESSFUL) {
+		_username.setText(L"");
+		_password.setText(L"");
+		_email.setText(L"");
+		_name.setText(L"");
+		_id.setText(L"");
+		_pageManager.setPage(Page::Login);
+	}
+	else if (status == INVALID_USERNAME) {
+
+	}
+	else if (status == INVALID_EMAIL) {
+
+	}
+	else if (status == INVALID_NAME) {
+
+	}
+	else if (status == INVALID_ID) {
+
+	}
 }
