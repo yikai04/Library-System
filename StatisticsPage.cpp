@@ -12,7 +12,8 @@ StatisticsPage::StatisticsPage(User& user, PageManager& pageManager) :
 	_topBarButton5(sf::Vector2f(150, 70), sf::Vector2f(1480, 80), sf::Color::Transparent, L"用户设置", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Setting); }),
 	_topBarButton6(sf::Vector2f(100, 70), sf::Vector2f(1680, 80), sf::Color::Transparent, L"登录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Login); }),
 
-	_textBox(sf::Vector2f(500,700), sf::Vector2f(200,200), _font, 30, L"你好", sf::Color::Blue)
+	_topBorrowedBooksTable(sf::Vector2f(800, 250), sf::Vector2f(130, 200), _font, 20, { L"排名", L"书名", L"借阅量" }, { 200.f, 400.f, 200.f }, 50.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false),
+	_topBorrowedUsersTable(sf::Vector2f(800, 250), sf::Vector2f(1000, 200), _font, 20, { L"排名", L"用户名", L"借阅量" }, { 200.f, 400.f, 200.f }, 50.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false)
 {
 	_backgroundTexture.loadFromFile("Image/Background(1920x1080).png");
 
@@ -20,6 +21,11 @@ StatisticsPage::StatisticsPage(User& user, PageManager& pageManager) :
 	_sprite.setPosition(0, 0);
 	_sprite.setTexture(_backgroundTexture);
 
+	_topBorrowedBooksTable.setLeftArrowSize(sf::Vector2f(40, 40));
+	_topBorrowedBooksTable.setRightArrowSize(sf::Vector2f(40, 40));
+	_topBorrowedBooksTable.setLeftArrowPosition(sf::Vector2f(700, 520));
+	_topBorrowedBooksTable.setRightArrowPosition(sf::Vector2f(760, 520));
+	_topBorrowedBooksTable.setPageNumberPosition(sf::Vector2f(830, 520));
 }
 
 StatisticsPage::~StatisticsPage()
@@ -36,12 +42,14 @@ void StatisticsPage::handleEvent(const sf::Event& event, sf::RenderWindow& windo
 	_topBarButton5.handleEvent(event, window);
 	_topBarButton6.handleEvent(event, window);
 
-	_textBox.handleEvent(event, window);
+	_topBorrowedBooksTable.handleEvent(event, window);
+	_topBorrowedUsersTable.handleEvent(event, window);
 }
 
 void StatisticsPage::update(sf::Time dt)
 {
-	_textBox.update(dt);
+	_topBorrowedBooksTable.update(dt);
+	_topBorrowedUsersTable.update(dt);
 }
 
 void StatisticsPage::render(sf::RenderWindow& window)
@@ -56,7 +64,8 @@ void StatisticsPage::render(sf::RenderWindow& window)
 	_topBarButton5.render(window);
 	_topBarButton6.render(window);
 
-	_textBox.render(window);
+	_topBorrowedBooksTable.render(window);
+	_topBorrowedUsersTable.render(window);
 	//window.display() called in main.cpp
 }
 
@@ -66,6 +75,16 @@ void StatisticsPage::onEnter()
 		_topBarButton6.setText(L"登出");
 		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
 	}
+
+	_topBarButton1.setButtonState(ButtonState::normal);
+	_topBarButton2.setButtonState(ButtonState::normal);
+	_topBarButton3.setButtonState(ButtonState::normal);
+	_topBarButton4.setButtonState(ButtonState::normal);
+	_topBarButton5.setButtonState(ButtonState::normal);
+	_topBarButton6.setButtonState(ButtonState::normal);
+
+	_showTopBorrowedBooks();
+	_showTopBorrowedUsers();
 }
 
 void StatisticsPage::_logoutHandler()
@@ -74,4 +93,34 @@ void StatisticsPage::_logoutHandler()
 	_topBarButton6.setText(L"登录");
 	_topBarButton6.setOnClickHandler([&]() {_pageManager.setPage(Page::Login); });
 	_pageManager.setPage(Page::Login);
+}
+
+void StatisticsPage::_showTopBorrowedBooks()
+{
+	std::vector<Book> allBooks = Book::getAllBooks();
+	std::sort(allBooks.begin(), allBooks.end(), [](Book& a, Book& b) {return a.getBorrowVolume() > b.getBorrowVolume(); });
+
+	std::vector<std::vector<std::wstring>> rows;
+
+	for (size_t i = 0; i < allBooks.size(); i++)
+	{
+		rows.push_back({ std::to_wstring(i + 1), allBooks[i].getBookName(), std::to_wstring(allBooks[i].getBorrowVolume()) });
+	}
+
+	_topBorrowedBooksTable.setRows(std::move(rows), std::move(allBooks));
+}
+
+void StatisticsPage::_showTopBorrowedUsers()
+{
+	std::vector<UserInfo> allUsers = UserInfo::getAllUsers();
+	std::sort(allUsers.begin(), allUsers.end(), [](UserInfo& a, UserInfo& b) {return a.getBorrowVolume() > b.getBorrowVolume(); });
+
+	std::vector<std::vector<std::wstring>> rows;
+
+	for (size_t i = 0; i < allUsers.size(); i++)
+	{
+		rows.push_back({ std::to_wstring(i + 1), allUsers[i].getUsername(), std::to_wstring(allUsers[i].getBorrowVolume()) });
+	}
+
+	_topBorrowedUsersTable.setRows(std::move(rows));
 }

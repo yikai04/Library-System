@@ -19,6 +19,7 @@ class UserInfo
 		UserInfo();
 		UserInfo(int userId);
 		UserInfo(const UserInfo& userInfo);
+		UserInfo& operator=(const UserInfo& userInfo);
 		~UserInfo();
 
 		void setUserId(int userId);
@@ -29,6 +30,7 @@ class UserInfo
 		std::wstring getEmail();
 		UserType getRole();
 		std::wstring getGender();
+		int getBorrowVolume();
 		Date getRegisterDate();
 
 		bool changeUsername(std::wstring username);
@@ -39,13 +41,16 @@ class UserInfo
 		bool changeRole(std::wstring role);
 		bool changePassword(std::wstring password);
 
+		bool addBorrowVolume();
+
 		std::vector<BorrowBookDetail> getBorrowedBooks();
 
 		static bool checkUsernameValidaty(std::wstring username);
 		static bool checkIdValidaty(int id);
+		static std::vector<UserInfo> getAllUsers();
 	
 	private:
-		void _setUserAllDetails();
+		void _loadUserInfosFromDB();
 		int _userId;
 		std::wstring _username;
 		std::wstring _email;
@@ -53,5 +58,6 @@ class UserInfo
 		UserType _role;
 		std::wstring _gender;
 		Date _registerDate;
+		int _borrowVolume;
 		int _delFlg;
 };

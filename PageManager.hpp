@@ -26,6 +26,7 @@ class PageManager
         ~PageManager();
         void setPage(Page newPage);
         Page getLastPage();
+		void homePageSearch(std::wstring searchText);
         void handleEvent(const sf::Event& event, sf::RenderWindow& window);
         void update(sf::Time dt);
         void render(sf::RenderWindow& window);

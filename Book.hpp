@@ -16,11 +16,16 @@ enum BookCategory{
 	Others //其他
 };
 
+BookCategory getCategoryByName(std::wstring categoryName);
+std::wstring getCategoryNameByCategory(BookCategory category);
+
 class Book
 {
 	public:
 		Book();
-		Book(int id, std::wstring bookName, std::wstring author, std::wstring publisher, BookCategory category, Date publishDate, int pages, int totalBook, int remainBook, double price, std::wstring _description, std::string img_url, int borrowVolume, bool del_flg);
+		Book(int id);
+		Book(const Book& book);
+		Book& operator=(const Book& book);
 		~Book();
 		int getBookId();
 		std::wstring getBookName();
@@ -38,24 +43,31 @@ class Book
 		int getBorrowVolume();
 		bool getDelFlg();
 
-		void setBookId(int id);
-		void setBookName(std::wstring bookName);
-		void setAuthor(std::wstring author);
-		void setPublisher(std::wstring publisher);
-		void setCategory(BookCategory category);
-		void setCategory(std::wstring categoryName);
-		void setPublishDate(Date publishDate);
-		void setPublishDate(std::string publishDate);
-		void setPages(int pages);
-		void setTotalBooks(int totalBook);
-		void setAvailableBooks(int remainBook);
-		void setPrice(double price);
-		void setDescription(std::wstring description);
-		void setImgUrl(std::string imgUrl);
-		void setBorrowVolume(int borrowVolume);
-		void setDelFlg(bool delFlg);
+		bool changeBookId(std::wstring id);
+		bool changeBookName(std::wstring bookName);
+		bool changeAuthor(std::wstring author);
+		bool changePublisher(std::wstring publisher);
+		bool changeCategory(std::wstring category);
+		bool changePublishDate(Date publishDate);
+		bool changePages(std::wstring pages);
+		bool changeTotalBook(std::wstring totalBook);
+		bool changeRemainBook(std::wstring remainBook);
+		bool changePrice(std::wstring price);
+		bool changeDescription(std::wstring description);
+		bool changeImgUrl(std::string imgUrl);
+
+		bool addBorrowVolume();
+
+		static std::vector<Book> getBooksByCategory(BookCategory category);
+		static std::vector<Book> getAllBooks();
+		static std::vector<Book> searchBooksInfo(std::wstring searchWord = L"", const std::wstring& category = L"全部");
+		static std::vector<Book> searchBooksInfoByName(std::wstring bookName = L"", const std::wstring& category = L"全部");
+		static std::vector<Book> searchBooksInfoByAuthor(std::wstring author = L"", const std::wstring& category = L"全部");
+		static std::vector<Book> searchBooksInfoByPublisher(std::wstring publisher = L"", const std::wstring& category = L"全部");
 
 	private:
+		bool _checkBookIdValidaty(int id);
+		void _loadBookInfosFromDB();
 		int _id;
 		std::wstring _bookName;
 		std::wstring _author;

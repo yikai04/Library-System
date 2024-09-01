@@ -71,6 +71,13 @@ void LoginPage::render(sf::RenderWindow& window)
 
 void LoginPage::onEnter()
 {
+    _topBarButton1.setButtonState(ButtonState::normal);
+    _topBarButton2.setButtonState(ButtonState::normal);
+    _topBarButton3.setButtonState(ButtonState::normal);
+    _topBarButton4.setButtonState(ButtonState::normal);
+    _topBarButton5.setButtonState(ButtonState::normal);
+    _topBarButton6.setButtonState(ButtonState::normal);
+
     _username.setText(L"");
     _password.setText(L"");
 }

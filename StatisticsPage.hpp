@@ -14,6 +14,8 @@ class StatisticsPage : public PageBase
 
     protected:
         void _logoutHandler();
+		void _showTopBorrowedBooks();
+		void _showTopBorrowedUsers();
 
     private:
         sf::Texture _backgroundTexture;
@@ -26,5 +28,8 @@ class StatisticsPage : public PageBase
         TextToogleButton _topBarButton5;
         TextToogleButton _topBarButton6;
 
-        TextBox _textBox;
+		Table _topBorrowedBooksTable;
+		Table _topBorrowedUsersTable;
+        //BarChart _categoryBorrowVolume;
+		//BarChart _monthBorrowVolume;
 };

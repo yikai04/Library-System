@@ -23,6 +23,7 @@ constexpr const char* CREATE_USER_INFO_TABLE_SQLCMD = "CREATE TABLE IF NOT EXIST
 														`register_date` date DEFAULT NULL , \
 														`gender` varchar(1) DEFAULT NULL , \
 														`email` varchar(50) DEFAULT NULL , \
+														`borrow_volume` int(10) DEFAULT '0', \
 														`del_flg` int(1) DEFAULT '0' , \
 														PRIMARY KEY(`id`) \
 														);";
@@ -106,7 +107,12 @@ class Date {
 		Date(std::wstring date);
 		Date& operator=(const Date& date);
 		~Date();
-
+		bool operator==(const Date& date) const;
+		bool operator!=(const Date& date) const;
+		bool operator<(const Date& date) const;
+		bool operator>(const Date& date) const;
+		bool operator<=(const Date& date) const;
+		bool operator>=(const Date& date) const;
 		void setDate(std::string date);
 		void setDate(std::wstring date);
 		void setTodayDate();

@@ -30,6 +30,7 @@ class Button
 		void setPosition(const sf::Vector2f& position);
 		void setSize(const sf::Vector2f& size);
 		void setOnClickHandler(std::function<void()> onClickHandler);
+		void setBackgroundColor(const sf::Color backgroundColor);
 		sf::Vector2f getSize();
 		sf::Vector2f getPosition();
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
@@ -105,10 +106,12 @@ class IconButton : public Button
 class TextBox
 {
 	public:
-		TextBox(float width, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText = L"输入框", const sf::Color& backgroundColor = sf::Color::White, bool isPassword = false);
-		TextBox(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText = L"输入框", const sf::Color& backgroundColor = sf::Color::White);
+		TextBox(float width, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText = L"输入框", const sf::Color& backgroundColor = sf::Color::White, bool isPassword = false, std::function<void()> onEnterHandler = []() {});
+		TextBox(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText = L"输入框", const sf::Color& backgroundColor = sf::Color::White, std::function<void()> onEnterHandler = []() {});
 		~TextBox();
 		void setText(std::wstring text);
+		void setPosition(const sf::Vector2f position);
+		void setFontSize(const int fontSize);
 		std::wstring getText();
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
 		void update(sf::Time dt);
@@ -138,6 +141,8 @@ class TextBox
 		int _lineCount;
 		std::vector<int> _lineLength;
 		float _singleWordHeight;
+
+		std::function<void()> _onEnterHandler;
 };
 
 class TextDisplay
@@ -173,6 +178,7 @@ class DropDown
 		void setDropDownVisible(bool isVisible);
 		void setSelectOption(const std::wstring& option);
 		void setActivate(bool isActivate);
+		void setBackgroudColor(const sf::Color backgroundColor);
 		std::wstring getSelectedOption();
 		bool getVisibility();
 		void dropDownButtonOnClickHandler();
@@ -210,6 +216,7 @@ class TextDisplayDropDown
 	protected:
 		void _editButtonOnClickHandler();
 		void _tickButtonOnClickHandler();
+		void _changeDropDownColor();
 		DropDown _dropDown;
 		IconButton _editButton;
 		bool _isEditable;
@@ -231,25 +238,31 @@ class SearchBar : public TextBox
 		void render(sf::RenderWindow& window);
 	
 	protected:
+		
 		IconButton _searchButton;
 		DropDown _bookCategoryDropDown;
 		DropDown _searchTypeDropDown;
 		std::function<void()> _searchHandler;
+		bool _isDropDownActivated;
 };
 
 class PageNumber : TextBox
 {
 	public:
-		PageNumber(sf::Vector2f position, const sf::Font& font);
+		PageNumber(sf::Vector2f position, const sf::Font& font, int fontSize, std::function<void(int)> changePageHandler = [](int a) {});
 		~PageNumber();
 		void setCurrentPage(int currentPage);
 		void setTotalPage(int totalPage);
+		void setPosition(const sf::Vector2f position);
+		void setFontSize(const int fontSize);
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
 		void update(sf::Time dt);
 		void render(sf::RenderWindow& window);
 
 	protected:
+		void _setPageNumber();
 		sf::Text _totalPage;
+		std::function<void(int)> _changePageHandler;
 };
 
 class BookDisplay
@@ -304,7 +317,7 @@ class BooksDisplayInRow
 class BooksDisplayInPage
 {
 	public:
-		BooksDisplayInPage(const sf::Font& font);
+		BooksDisplayInPage(const sf::Font& font, std::function<void(Book*)> onClickHandler);
 		~BooksDisplayInPage();
 		void setBooks(std::vector<Book>&& books);
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
@@ -330,16 +343,23 @@ class BooksDisplayInPage
 		IconButton _rightArrow;
 		int _currentDisplayPage;
 		int _maxBooksIndex;
+		std::function<void(Book*)> _onClickHandler;
 };
 
 class Table
 {
 	public:
-		Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, const float& rowHeight, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2);
+		Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, const float& rowHeight, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2, bool isScrollable = false);
 		~Table();
 		void setHeaders(std::vector<std::wstring>&& headers);
-		void setRows(std::vector<std::vector<std::wstring>>&& rows, std::vector<Book>&& books);
+		void setRows(std::vector<std::vector<std::wstring>>&& rows, std::vector<Book>&& books = {});
+		void setLeftArrowPosition(const sf::Vector2f position);
+		void setLeftArrowSize(const sf::Vector2f size);
+		void setRightArrowPosition(const sf::Vector2f position);
+		void setRightArrowSize(const sf::Vector2f size);
+		void setPageNumberPosition(const sf::Vector2f position);
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
+		void update(sf::Time dt);
 		void render(sf::RenderWindow& window);
 
 	protected:
@@ -358,6 +378,9 @@ class Table
 		};
 		void _updateRows();
 		void _updateHeaders();
+		void _nextPage();
+		void _previousPage();
+		void _setPageNumber(int pageNumber);
 		std::vector<std::vector<std::wstring>> _rowsData;
 		std::vector<Book> _books;
 		std::vector<std::wstring> _headers;
@@ -372,6 +395,13 @@ class Table
 		sf::Color _rowColor2;
 		sf::Vector2f _position;
 		int _fontSize;
+		int _totalRows;
+		int _currentDisplayPage;
+		int _maxRowsIndex;
+		bool _isScrollable;
+		PageNumber _pageNumber;
+		IconButton _leftArrow;
+		IconButton _rightArrow;
 };
 
 class BookDetailPopUp
@@ -384,6 +414,7 @@ class BookDetailPopUp
 		void setEditable(bool isEditable);
 		bool getPopUpVisiblity();
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
+		void update(sf::Time dt);
 		void render(sf::RenderWindow& window);
 
 	protected:

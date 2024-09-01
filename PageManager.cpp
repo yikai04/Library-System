@@ -41,6 +41,13 @@ Page PageManager::getLastPage()
 	return lastPage;
 }
 
+void PageManager::homePageSearch(std::wstring searchText)
+{
+	if (pages[Page::Search]) {
+		pages[Page::Search]->search(searchText);
+	}
+}
+
 void PageManager::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 {
     if (pages[currentPage]) {

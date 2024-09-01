@@ -98,12 +98,19 @@ void SettingPage::render(sf::RenderWindow& window)
 
 void SettingPage::onEnter()
 {
-	_showUserInfo();
-
 	if (_user.getSelfUserInfo().getRole() != UserType::Guest) {
 		_topBarButton6.setText(L"登出");
 		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
 	}
+
+	_topBarButton1.setButtonState(ButtonState::normal);
+	_topBarButton2.setButtonState(ButtonState::normal);
+	_topBarButton3.setButtonState(ButtonState::normal);
+	_topBarButton4.setButtonState(ButtonState::normal);
+	_topBarButton5.setButtonState(ButtonState::normal);
+	_topBarButton6.setButtonState(ButtonState::normal);
+	
+	_showUserInfo();
 }
 
 void SettingPage::_logoutHandler()

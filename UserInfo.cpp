@@ -40,6 +40,7 @@ UserInfo::UserInfo() :
 	_role(UserType::Guest),
 	_gender(L""),
 	_registerDate(Date()),
+	_borrowVolume(0),
 	_delFlg(0)
 {
 
@@ -48,7 +49,7 @@ UserInfo::UserInfo() :
 UserInfo::UserInfo(int userId)
 {
 	_userId = userId;
-	_setUserAllDetails();
+	_loadUserInfosFromDB();
 }
 
 UserInfo::UserInfo(const UserInfo& userInfo)
@@ -60,7 +61,23 @@ UserInfo::UserInfo(const UserInfo& userInfo)
 	_role = userInfo._role;
 	_gender = userInfo._gender;
 	_registerDate = userInfo._registerDate;
+	_borrowVolume = userInfo._borrowVolume;
 	_delFlg = userInfo._delFlg;
+}
+
+UserInfo& UserInfo::operator=(const UserInfo& userInfo)
+{
+	_userId = userInfo._userId;
+	_username = userInfo._username;
+	_email = userInfo._email;
+	_name = userInfo._name;
+	_role = userInfo._role;
+	_gender = userInfo._gender;
+	_registerDate = userInfo._registerDate;
+	_borrowVolume = userInfo._borrowVolume;
+	_delFlg = userInfo._delFlg;
+
+	return *this;
 }
 
 UserInfo::~UserInfo()
@@ -72,7 +89,7 @@ void UserInfo::setUserId(int userId)
 {
 	if (userId >= 0) {
 		_userId = userId;
-		_setUserAllDetails();
+		_loadUserInfosFromDB();
 	}
 	else {
 		_userId = -1;
@@ -116,6 +133,11 @@ std::wstring UserInfo::getGender()
 	return _gender;
 }
 
+int UserInfo::getBorrowVolume()
+{
+	return _borrowVolume;
+}
+
 Date UserInfo::getRegisterDate()
 {
 	return _registerDate;
@@ -156,7 +178,7 @@ bool UserInfo::changeUsername(std::wstring username)
 
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_DONE) {
-		_username = username;
+		_loadUserInfosFromDB();
 		sqlite3_finalize(stmt);
 		return true;
 	}
@@ -202,7 +224,7 @@ bool UserInfo::changeEmail(std::wstring email)
 
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_DONE) {
-		_email = email;
+		_loadUserInfosFromDB();
 		sqlite3_finalize(stmt);
 		return true;
 	}
@@ -243,7 +265,7 @@ bool UserInfo::changeName(std::wstring name)
 
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_DONE) {
-		_name = name;
+		_loadUserInfosFromDB();
 		sqlite3_finalize(stmt);
 		return true;
 	}
@@ -255,7 +277,8 @@ bool UserInfo::changeName(std::wstring name)
 
 bool UserInfo::changeId(std::wstring id)
 {
-	if (id == L"") {
+	std::regex digitRegex("^\\d+$");
+	if (!std::regex_match(wstring_to_string(id), digitRegex)) {
 		return false;
 	}
 
@@ -278,10 +301,6 @@ bool UserInfo::changeId(std::wstring id)
 		return false;
 	}
 
-	if (!checkIdValidaty(idInt)) {
-		return false;
-	}
-
 	rc = sqlite3_bind_int(stmt, 1, idInt);
 	rc = sqlite3_bind_int(stmt, 2, _userId);
 	if (rc != SQLITE_OK) {
@@ -292,7 +311,7 @@ bool UserInfo::changeId(std::wstring id)
 
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_DONE) {
-		_userId = idInt;
+		_loadUserInfosFromDB();
 		sqlite3_finalize(stmt);
 		return true;
 	}
@@ -335,7 +354,7 @@ bool UserInfo::changeGender(std::wstring gender)
 
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_DONE) {
-		_gender = gender;
+		_loadUserInfosFromDB();
 		sqlite3_finalize(stmt);
 		return true;
 	}
@@ -348,18 +367,14 @@ bool UserInfo::changeGender(std::wstring gender)
 bool UserInfo::changeRole(std::wstring role)
 {
 	std::string roleStr;
-	UserType userType;
 	if (role == L"学生") {
 		roleStr = "Student";
-		userType = UserType::Student;
 	}
 	else if (role == L"教师") {
 		roleStr = "Teacher";
-		userType = UserType::Teacher;
 	}
 	else if (role == L"管理员") {
 		roleStr = "Admin";
-		userType = UserType::Admin;
 	}
 	else {
 		return false;
@@ -385,7 +400,7 @@ bool UserInfo::changeRole(std::wstring role)
 
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_DONE) {
-		_role = userType;
+		_loadUserInfosFromDB();
 		sqlite3_finalize(stmt);
 		return true;
 	}
@@ -422,6 +437,37 @@ bool UserInfo::changePassword(std::wstring password)
 
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_DONE) {
+		sqlite3_finalize(stmt);
+		return true;
+	}
+	else {
+		sqlite3_finalize(stmt);
+		return false;
+	}
+}
+
+bool UserInfo::addBorrowVolume()
+{
+	const char* sql = "UPDATE user_info SET borrow_volume = borrow_volume + 1 WHERE id = ?";
+	int rc;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	rc = sqlite3_bind_int(stmt, 1, _userId);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	rc = sqlite3_step(stmt);
+	if (rc == SQLITE_DONE) {
+		_loadUserInfosFromDB();
 		sqlite3_finalize(stmt);
 		return true;
 	}
@@ -472,7 +518,7 @@ std::vector<BorrowBookDetail> UserInfo::getBorrowedBooks()
 
 
 
-//@return true if the username is valid, false otherwise
+//@return true if the username is valid(not exist), false otherwise
 bool UserInfo::checkUsernameValidaty(std::wstring username)
 {
 	const char* sql = "SELECT * FROM user_info WHERE username = ?";
@@ -504,7 +550,7 @@ bool UserInfo::checkUsernameValidaty(std::wstring username)
 	}
 }
 
-//@return true if the id is valid, false otherwise
+//@return true if the id is valid(not exist), false otherwise
 bool UserInfo::checkIdValidaty(int id)
 {
 	const char* sql = "SELECT * FROM user_info WHERE id = ?";
@@ -535,7 +581,29 @@ bool UserInfo::checkIdValidaty(int id)
 	}
 }
 
-void UserInfo::_setUserAllDetails()
+std::vector<UserInfo> UserInfo::getAllUsers()
+{
+	std::vector<UserInfo> usersInfo;
+	const char* sql = "SELECT id FROM user_info";
+	int rc;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return usersInfo;
+	}
+
+	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+		int id = sqlite3_column_int(stmt, 0);
+		usersInfo.push_back(UserInfo(id));
+	}
+
+	sqlite3_finalize(stmt);
+	return usersInfo;
+}
+
+void UserInfo::_loadUserInfosFromDB()
 {
 	const char* sql = "SELECT * FROM user_info WHERE id = ?";
 	int rc;
@@ -562,6 +630,9 @@ void UserInfo::_setUserAllDetails()
 		_registerDate = Date(std::string((const char*)sqlite3_column_text(stmt, 5)));
 		_gender = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 6));
 		_email = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 7));
-		_delFlg = sqlite3_column_int(stmt, 8);
+		_borrowVolume = sqlite3_column_int(stmt, 8);
+		_delFlg = sqlite3_column_int(stmt, 9);
 	}
+
+	sqlite3_finalize(stmt);
 }

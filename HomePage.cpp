@@ -11,17 +11,18 @@ HomePage::HomePage(User& user, PageManager& pageManager) :
     _topBarButton5(sf::Vector2f(150, 70), sf::Vector2f(1480, 80), sf::Color::Transparent, L"用户设置", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Setting); }),
     _topBarButton6(sf::Vector2f(100, 70), sf::Vector2f(1680, 80), sf::Color::Transparent, L"登录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Login); }),
 
-    _searchBar(700.0, sf::Vector2f(650, 200), L"搜索", _font, 35),
+    _textBox(720.0, sf::Vector2f(570, 512), _font, 40, L"搜索", sf::Color::Transparent, false, [&]() {_searchHandler(); }),
+	_searchButton(sf::Vector2f(60, 60), sf::Vector2f(1290, 510), "Icon/searchIcon.png", [&]() {_searchHandler(); }),
     _bookRowDisplay(720.f, _font, [&](Book* book) {_bookDetailPopUpHandler(book); }),
-    _bookDetailPopUp(_font, false, false)
+    _bookDetailPopUp(_font, false, true)
 {
-    _backgroundTexture.loadFromFile("Image/Background(1920x1080).png");
+    _backgroundTexture.loadFromFile("Image/HomePage.png");
     //_sprite.setTextureRect(sf::IntRect(0, 0, 800, 800));
     _sprite.setScale(1, 1);
     _sprite.setPosition(0, 0);
     _sprite.setTexture(_backgroundTexture);
 
-    std::vector<Book> allBooks = _user.searchBooksInfo();
+    std::vector<Book> allBooks = Book::searchBooksInfo();
     _bookRowDisplay.setBooks(std::move(allBooks));
 }
 
@@ -44,13 +45,15 @@ void HomePage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 	_topBarButton5.handleEvent(event, window);
 	_topBarButton6.handleEvent(event, window);
 
-    _searchBar.handleEvent(event, window);
+    _textBox.handleEvent(event, window);
+	_searchButton.handleEvent(event, window);
 	_bookRowDisplay.handleEvent(event, window);
 }
 
 void HomePage::update(sf::Time dt)
 {
-    _searchBar.update(dt);
+    _textBox.update(dt);
+	_bookDetailPopUp.update(dt);
 }
 
 void HomePage::render(sf::RenderWindow& window)
@@ -64,7 +67,8 @@ void HomePage::render(sf::RenderWindow& window)
 	_topBarButton5.render(window);
 	_topBarButton6.render(window);
 
-    _searchBar.render(window);
+    _textBox.render(window);
+	_searchButton.render(window);
     _bookRowDisplay.render(window);
 	_bookDetailPopUp.render(window);
     //window.display() called in main.cpp
@@ -77,7 +81,13 @@ void HomePage::onEnter()
         _topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
     }
 
-    _searchBar.setText(L"");
+    _textBox.setText(L"");
+    _topBarButton1.setButtonState(ButtonState::normal);
+    _topBarButton2.setButtonState(ButtonState::normal);
+    _topBarButton3.setButtonState(ButtonState::normal);
+    _topBarButton4.setButtonState(ButtonState::normal);
+    _topBarButton5.setButtonState(ButtonState::normal);
+    _topBarButton6.setButtonState(ButtonState::normal);
 }
 
 void HomePage::_logoutHandler()
@@ -92,4 +102,10 @@ void HomePage::_bookDetailPopUpHandler(Book* book)
 {
 	_bookDetailPopUp.setBook(book);
 	_bookDetailPopUp.setPopUpVisiblity(true);
+}
+
+void HomePage::_searchHandler()
+{
+	_pageManager.homePageSearch(_textBox.getText());
+	_pageManager.setPage(Page::Search);
 }

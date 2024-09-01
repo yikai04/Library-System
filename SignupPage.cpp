@@ -100,6 +100,13 @@ void SignupPage::onEnter()
 		_topBarButton6.setText(L"登出");
 		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
 	}
+
+	_topBarButton1.setButtonState(ButtonState::normal);
+	_topBarButton2.setButtonState(ButtonState::normal);
+	_topBarButton3.setButtonState(ButtonState::normal);
+	_topBarButton4.setButtonState(ButtonState::normal);
+	_topBarButton5.setButtonState(ButtonState::normal);
+	_topBarButton6.setButtonState(ButtonState::normal);
 }
 
 void SignupPage::_logoutHandler()

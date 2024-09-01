@@ -115,6 +115,12 @@ void Button::setOnClickHandler(std::function<void()> onClickHandler)
 	_onClickHandler = onClickHandler;
 }
 
+void Button::setBackgroundColor(const sf::Color backgroundColor)
+{
+	_backgroundColor = backgroundColor;
+	_buttonShape.setFillColor(_backgroundColor);
+}
+
 sf::Vector2f Button::getSize()
 {
 	return _size;
@@ -425,12 +431,19 @@ void IconButton::_resizeIcon()
 	}
 
 	_iconTexture.loadFromImage(resizedImage);
+
+	//_iconTexture.loadFromFile(_iconPath);
+	_iconSprite.setTexture(_iconTexture);
+	//_iconSprite.setScale(
+	//	_size.x / _iconTexture.getSize().x,
+	//	_size.y / _iconTexture.getSize().y
+	//);
 }
 
 
 
 
-TextBox::TextBox(float width, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText, const sf::Color& backgroundColor, bool isPassword) :
+TextBox::TextBox(float width, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText, const sf::Color& backgroundColor, bool isPassword, std::function<void()> onEnterHandler) :
 	_caretVisible(false),
 	_caretTimer(sf::Time::Zero),
 	_caretPosition(0),
@@ -438,7 +451,8 @@ TextBox::TextBox(float width, sf::Vector2f position, const sf::Font& font, const
 	_cursorType(sf::Cursor::Arrow),
 	_isPassword(isPassword),
 	_isMultiLine(false),
-	_lineCount(0)
+	_lineCount(0),
+	_onEnterHandler(onEnterHandler)
 {
 	_lineLength.push_back(0);
 
@@ -462,16 +476,16 @@ TextBox::TextBox(float width, sf::Vector2f position, const sf::Font& font, const
 	_placeHolderText.setString(placeHolderText);
 	_placeHolderText.setPosition(_inputText.getPosition());
 
-	_textBox.setSize(sf::Vector2f(width, _placeHolderText.getGlobalBounds().height + 20.f));
+	_textBox.setSize(sf::Vector2f(width, _singleWordHeight + 20.f));
 
-	_caret.setSize(sf::Vector2f(2.f, _placeHolderText.getGlobalBounds().height));
+	_caret.setSize(sf::Vector2f(2.f, _singleWordHeight));
 	_caret.setFillColor(sf::Color::Black);
 	
 	_displayString();
 	_updateCaretPosition();
 }
 
-TextBox::TextBox(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText, const sf::Color& backgroundColor) :
+TextBox::TextBox(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, const std::wstring placeHolderText, const sf::Color& backgroundColor, std::function<void()> onEnterHandler) :
 	_caretVisible(false),
 	_caretTimer(sf::Time::Zero),
 	_caretPosition(0),
@@ -479,7 +493,8 @@ TextBox::TextBox(sf::Vector2f size, sf::Vector2f position, const sf::Font& font,
 	_cursorType(sf::Cursor::Arrow),
 	_isPassword(false),
 	_isMultiLine(true),
-	_lineCount(0)
+	_lineCount(0),
+	_onEnterHandler(onEnterHandler)
 {
 	_lineLength.push_back(0);
 
@@ -504,7 +519,7 @@ TextBox::TextBox(sf::Vector2f size, sf::Vector2f position, const sf::Font& font,
 	_placeHolderText.setString(placeHolderText);
 	_placeHolderText.setPosition(_inputText.getPosition());
 
-	_caret.setSize(sf::Vector2f(2.f, _placeHolderText.getGlobalBounds().height));
+	_caret.setSize(sf::Vector2f(2.f, _singleWordHeight));
 	_caret.setFillColor(sf::Color::Black);
 
 	_displayString();
@@ -520,6 +535,24 @@ void TextBox::setText(std::wstring text)
 {
 	_inputString = text;
 	_displayString();
+}
+
+void TextBox::setPosition(const sf::Vector2f position)
+{
+	_textBox.setPosition(position);
+	_inputText.setPosition(_textBox.getPosition().x + 10.f, _textBox.getPosition().y + 5.f);
+	_placeHolderText.setPosition(_inputText.getPosition());
+	_updateCaretPosition();
+}
+
+void TextBox::setFontSize(const int fontSize)
+{
+	_inputText.setCharacterSize(fontSize);
+	_placeHolderText.setCharacterSize(fontSize);
+	_inputTextLenCounter.setCharacterSize(fontSize);
+	_singleWordHeight = _inputTextLenCounter.getGlobalBounds().height;
+	_caret.setSize(sf::Vector2f(2.f, _singleWordHeight));
+	_updateCaretPosition();
 }
 
 std::wstring TextBox::getText()
@@ -594,6 +627,9 @@ void TextBox::handleEvent(const sf::Event& event, sf::RenderWindow& window) {
 					_displayString();
 					_caretPosition--;
 				}
+			}
+			else if (event.key.code == sf::Keyboard::Enter) {
+				_onEnterHandler();
 			}
 		}
 	}
@@ -889,6 +925,15 @@ void DropDown::setActivate(bool isActivate)
 	}
 }
 
+void DropDown::setBackgroudColor(const sf::Color backgroundColor)
+{
+	_backgroundColor = backgroundColor;
+	_dropDownButton.setBackgroundColor(_backgroundColor);
+
+	_deleteOptionButtons();
+	_createOptionButtons();
+}
+
 std::wstring DropDown::getSelectedOption()
 {
 	return _selectedOption;
@@ -1018,6 +1063,7 @@ void TextDisplayDropDown::render(sf::RenderWindow& window)
 void TextDisplayDropDown::_editButtonOnClickHandler()
 {
 	_isEditing = true;
+	_changeDropDownColor();
 	_dropDown.setActivate(true);
 	_editButton.setIcon("Icon/tickIcon.png");
 	_editButton.setOnClickHandler([&]() {_tickButtonOnClickHandler(); });
@@ -1027,16 +1073,27 @@ void TextDisplayDropDown::_tickButtonOnClickHandler()
 {
 	if (_editHandler()) {
 		_isEditing = false;
+		_changeDropDownColor();
 		_dropDown.setActivate(false);
 		_editButton.setIcon("Icon/editIcon.png");
 		_editButton.setOnClickHandler([&]() {_editButtonOnClickHandler(); });
 	}
 }
 
+void TextDisplayDropDown::_changeDropDownColor()
+{
+	if (_isEditing) {
+		_dropDown.setBackgroudColor(sf::Color(203, 140, 63, 255));
+	}
+	else {
+		_dropDown.setBackgroudColor(sf::Color::Transparent);
+	}
+}
+
 
 
 SearchBar::SearchBar(float width, sf::Vector2f position, const std::wstring placeHolderText, const sf::Font& font, const int& fontSize, std::function<void()> searchHandler) :
-	TextBox(width, position, font, fontSize, placeHolderText),
+	TextBox(width, position, font, fontSize, placeHolderText, sf::Color::White, false, searchHandler),
 	_searchButton(sf::Vector2f(_textBox.getSize().y, _textBox.getSize().y), sf::Vector2f(_textBox.getPosition().x + _textBox.getSize().x, _textBox.getPosition().y), "Icon/searchIcon.png", searchHandler),
 	_bookCategoryDropDown(sf::Vector2f(350.f, _textBox.getSize().y), sf::Vector2f(_textBox.getPosition().x - 350.f, _textBox.getPosition().y), sf::Color(200,200,200,255), font, fontSize, L"全部"),
 	_searchTypeDropDown(sf::Vector2f(200.f, _textBox.getSize().y), sf::Vector2f(_textBox.getPosition().x + width + _textBox.getSize().y, _textBox.getPosition().y), sf::Color(200, 200, 200, 255), font, fontSize, L"全部"),
@@ -1077,14 +1134,6 @@ void SearchBar::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 	_searchButton.handleEvent(event, window);
 	_bookCategoryDropDown.handleEvent(event, window);
 	_searchTypeDropDown.handleEvent(event, window);
-	
-	if (event.type == sf::Event::KeyPressed) {
-		if (event.key.code == sf::Keyboard::Enter) {
-			_searchHandler();
-			_bookCategoryDropDown.setDropDownVisible(false);
-			_searchTypeDropDown.setDropDownVisible(false);
-		}
-	}
 }
 
 void SearchBar::update(sf::Time dt)
@@ -1103,11 +1152,12 @@ void SearchBar::render(sf::RenderWindow& window)
 
 
 
-PageNumber::PageNumber(sf::Vector2f position, const sf::Font& font) :
-	TextBox(70.f, position, font, 25, L"页数")
+PageNumber::PageNumber(sf::Vector2f position, const sf::Font& font, int fontSize, std::function<void(int)> changePageHandler) :
+	TextBox(70.f, position, font, fontSize, L"页数", sf::Color::White, false, [&]() {_setPageNumber(); }),
+	_changePageHandler(changePageHandler)
 {
 	_totalPage.setFont(font);
-	_totalPage.setCharacterSize(25);
+	_totalPage.setCharacterSize(fontSize);
 	_totalPage.setFillColor(sf::Color::Black);
 	_totalPage.setPosition(_textBox.getPosition().x + _textBox.getSize().x, _textBox.getPosition().y + 5.f);
 }
@@ -1128,6 +1178,18 @@ void PageNumber::setTotalPage(int totalPage)
 	_totalPage.setString(L"/" + std::to_wstring(totalPage));
 }
 
+void PageNumber::setPosition(const sf::Vector2f position)
+{
+	TextBox::setPosition(position);
+	_totalPage.setPosition(_textBox.getPosition().x + _textBox.getSize().x, _textBox.getPosition().y + 5.f);
+}
+
+void PageNumber::setFontSize(const int fontSize)
+{
+	TextBox::setFontSize(fontSize);
+	_totalPage.setCharacterSize(fontSize);
+}
+
 void PageNumber::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 {
 	TextBox::handleEvent(event, window);
@@ -1142,6 +1204,11 @@ void PageNumber::render(sf::RenderWindow& window)
 {
 	TextBox::render(window);
 	window.draw(_totalPage);
+}
+
+void PageNumber::_setPageNumber()
+{
+	_changePageHandler(std::stoi(_inputString));
 }
 
 
@@ -1356,7 +1423,7 @@ void BooksDisplayInRow::_updateDisplay()
 
 #define ROW_ONE_Y 350
 #define ROW_TWO_Y 720
-BooksDisplayInPage::BooksDisplayInPage(const sf::Font& font) :
+BooksDisplayInPage::BooksDisplayInPage(const sf::Font& font, std::function<void(Book*)> onClickHandler) :
 	_bookDisplay1(sf::Vector2f(200, 250), sf::Vector2f(260, ROW_ONE_Y), font, 25),
 	_bookDisplay2(sf::Vector2f(200, 250), sf::Vector2f(560, ROW_ONE_Y), font, 25),
 	_bookDisplay3(sf::Vector2f(200, 250), sf::Vector2f(860, ROW_ONE_Y), font, 25),
@@ -1370,7 +1437,8 @@ BooksDisplayInPage::BooksDisplayInPage(const sf::Font& font) :
 	_leftArrow(sf::Vector2f(70, 70), sf::Vector2f(70, 650), "Icon/leftSideArrowIcon.jpg", [&]() {this->switchLeftDisplay(); }),
 	_rightArrow(sf::Vector2f(70, 70), sf::Vector2f(1780, 650), "Icon/rightSideArrowIcon.jpg", [&]() {this->switchRightDisplay(); }),
 	_currentDisplayPage(0),
-	_maxBooksIndex(0)
+	_maxBooksIndex(0),
+	_onClickHandler(onClickHandler)
 {
 
 }
@@ -1451,6 +1519,17 @@ void BooksDisplayInPage::switchLeftDisplay()
 		_bookDisplay9.setBook(&_books[_currentDisplayPage * 10 + 8]);
 		_bookDisplay10.setBook(&_books[_currentDisplayPage * 10 + 9]);
 
+		_bookDisplay1.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10]); });
+		_bookDisplay2.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 1]); });
+		_bookDisplay3.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 2]); });
+		_bookDisplay4.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 3]); });
+		_bookDisplay5.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 4]); });
+		_bookDisplay6.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 5]); });
+		_bookDisplay7.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 6]); });
+		_bookDisplay8.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 7]); });
+		_bookDisplay9.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 8]); });
+		_bookDisplay10.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 9]); });
+
 		_bookDisplay1.setVisiblity(true);
 		_bookDisplay2.setVisiblity(true);
 		_bookDisplay3.setVisiblity(true);
@@ -1475,6 +1554,7 @@ void BooksDisplayInPage::_updateDisplay()
 {
 	if (_currentDisplayPage * 10 < _maxBooksIndex) {
 		_bookDisplay1.setBook(&_books[_currentDisplayPage * 10]);
+		_bookDisplay1.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10]); });
 		_bookDisplay1.setVisiblity(true);
 	}
 	else {
@@ -1482,6 +1562,7 @@ void BooksDisplayInPage::_updateDisplay()
 	}
 	if (_currentDisplayPage * 10 + 1 < _maxBooksIndex) {
 		_bookDisplay2.setBook(&_books[_currentDisplayPage * 10 + 1]);
+		_bookDisplay2.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 1]); });
 		_bookDisplay2.setVisiblity(true);
 	}
 	else {
@@ -1489,6 +1570,7 @@ void BooksDisplayInPage::_updateDisplay()
 	}
 	if (_currentDisplayPage * 10 + 2 < _maxBooksIndex) {
 		_bookDisplay3.setBook(&_books[_currentDisplayPage * 10 + 2]);
+		_bookDisplay3.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 2]); });
 		_bookDisplay3.setVisiblity(true);
 	}
 	else {
@@ -1496,6 +1578,7 @@ void BooksDisplayInPage::_updateDisplay()
 	}
 	if (_currentDisplayPage * 10 + 3 < _maxBooksIndex) {
 		_bookDisplay4.setBook(&_books[_currentDisplayPage * 10 + 3]);
+		_bookDisplay4.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 3]); });
 		_bookDisplay4.setVisiblity(true);
 	}
 	else {
@@ -1503,6 +1586,7 @@ void BooksDisplayInPage::_updateDisplay()
 	}
 	if (_currentDisplayPage * 10 + 4 < _maxBooksIndex) {
 		_bookDisplay5.setBook(&_books[_currentDisplayPage * 10 + 4]);
+		_bookDisplay5.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 4]); });
 		_bookDisplay5.setVisiblity(true);
 	}
 	else {
@@ -1510,6 +1594,7 @@ void BooksDisplayInPage::_updateDisplay()
 	}
 	if (_currentDisplayPage * 10 + 5 < _maxBooksIndex) {
 		_bookDisplay6.setBook(&_books[_currentDisplayPage * 10 + 5]);
+		_bookDisplay6.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 5]); });
 		_bookDisplay6.setVisiblity(true);
 	}
 	else {
@@ -1517,6 +1602,7 @@ void BooksDisplayInPage::_updateDisplay()
 	}
 	if (_currentDisplayPage * 10 + 6 < _maxBooksIndex) {
 		_bookDisplay7.setBook(&_books[_currentDisplayPage * 10 + 6]);
+		_bookDisplay7.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 6]); });
 		_bookDisplay7.setVisiblity(true);
 	}
 	else {
@@ -1524,6 +1610,7 @@ void BooksDisplayInPage::_updateDisplay()
 	}
 	if (_currentDisplayPage * 10 + 7 < _maxBooksIndex) {
 		_bookDisplay8.setBook(&_books[_currentDisplayPage * 10 + 7]);
+		_bookDisplay8.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 7]); });
 		_bookDisplay8.setVisiblity(true);
 	}
 	else {
@@ -1531,6 +1618,7 @@ void BooksDisplayInPage::_updateDisplay()
 	}
 	if (_currentDisplayPage * 10 + 8 < _maxBooksIndex) {
 		_bookDisplay9.setBook(&_books[_currentDisplayPage * 10 + 8]);
+		_bookDisplay9.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 8]); });
 		_bookDisplay9.setVisiblity(true);
 	}
 	else {
@@ -1538,6 +1626,7 @@ void BooksDisplayInPage::_updateDisplay()
 	}
 	if (_currentDisplayPage * 10 + 9 < _maxBooksIndex) {
 		_bookDisplay10.setBook(&_books[_currentDisplayPage * 10 + 9]);
+		_bookDisplay10.setOnClickHandler([&]() {_onClickHandler(&_books[_currentDisplayPage * 10 + 9]); });
 		_bookDisplay10.setVisiblity(true);
 	}
 	else {
@@ -1547,7 +1636,7 @@ void BooksDisplayInPage::_updateDisplay()
 
 
 
-Table::Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, const float& rowHeight, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2) :
+Table::Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, const float& rowHeight, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2, bool isScrollable) :
 	_view(sf::FloatRect(position, size)),
 	_font(font),
 	_fontSize(fontSize),
@@ -1557,9 +1646,16 @@ Table::Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, con
 	_rowColor2(rowColor2),
 	_position(position),
 	_rowWidth(std::move(rowWidth)),
-	_rowHeight(rowHeight)
+	_rowHeight(rowHeight),
+	_isScrollable(isScrollable),
+	_pageNumber(sf::Vector2f(1700, 970), font, fontSize, [&](int page) {_setPageNumber(page); }),
+	_leftArrow(sf::Vector2f(70, 70), sf::Vector2f(1500, 950), "Icon/leftSideArrowIcon.jpg", [&]() {_previousPage(); }),
+	_rightArrow(sf::Vector2f(70, 70), sf::Vector2f(1600, 950), "Icon/rightSideArrowIcon.jpg", [&]() {_nextPage(); }),
+	_currentDisplayPage(0)
 {
+	_totalRows = size.y / rowHeight;
 	_updateHeaders();
+	_pageNumber.setCurrentPage(_currentDisplayPage + 1);
 }
 
 Table::~Table()
@@ -1590,15 +1686,63 @@ void Table::setRows(std::vector<std::vector<std::wstring>>&& rowsData, std::vect
 	_updateRows();
 }
 
+void Table::setLeftArrowPosition(const sf::Vector2f position)
+{
+	_leftArrow.setPosition(position);
+}
+
+void Table::setLeftArrowSize(const sf::Vector2f size)
+{
+	_leftArrow.setSize(size);
+}
+
+void Table::setRightArrowPosition(const sf::Vector2f position)
+{
+	_rightArrow.setPosition(position);
+}
+
+void Table::setRightArrowSize(const sf::Vector2f size)
+{
+	_rightArrow.setSize(size);
+}
+
+void Table::setPageNumberPosition(const sf::Vector2f position)
+{
+	_pageNumber.setPosition(position);
+}
+
 void Table::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 {
 	for (TextToogleButton* headerButton : _headerButtons) {
 		headerButton->handleEvent(event, window);
 	}
 
-	for (_row* row : _rowDisplay) {
-		row->handleEvent(event, window);
+	if (_isScrollable) {
+		for (_row* row : _rowDisplay) {
+			row->handleEvent(event, window);
+		}
 	}
+	else {
+		_pageNumber.handleEvent(event, window);
+		if (_currentDisplayPage > 0) {
+			_leftArrow.handleEvent(event, window);
+		}
+		if (_currentDisplayPage * _totalRows + _totalRows < _rowDisplay.size()) {
+			_rightArrow.handleEvent(event, window);
+		}
+
+		for (size_t i = 0; i < _totalRows; i++) {
+			if (i + _currentDisplayPage * _totalRows < _rowDisplay.size()) {
+				_row* row = _rowDisplay[i + _currentDisplayPage * _totalRows];
+				row->handleEvent(event, window);
+			}
+		}
+	}
+}
+
+void Table::update(sf::Time dt)
+{
+	_pageNumber.update(dt);
 }
 
 void Table::render(sf::RenderWindow& window)
@@ -1607,8 +1751,26 @@ void Table::render(sf::RenderWindow& window)
 		headerButton->render(window);
 	}
 
-	for (_row* row : _rowDisplay) {
-		row->render(window);
+	if (_isScrollable) {
+		for (_row* row : _rowDisplay) {
+			row->render(window);
+		}
+	}
+	else {
+		_pageNumber.render(window);
+		if (_currentDisplayPage > 0) {
+			_leftArrow.render(window);
+		}
+		if (_currentDisplayPage * _totalRows + _totalRows < _rowDisplay.size()) {
+			_rightArrow.render(window);
+		}
+
+		for (size_t i = 0; i < _totalRows; i++) {
+			if (i + _currentDisplayPage * _totalRows < _rowDisplay.size()) {
+				_row* row = _rowDisplay[i + _currentDisplayPage * _totalRows];
+				row->render(window);
+			}
+		}
 	}
 }
 
@@ -1656,12 +1818,20 @@ void Table::_updateRows()
 		_rowDisplay.pop_back();
 	}
 
+	int currentRow = 0;
 	float positionY = _position.y + _rowHeight;
 	for (size_t i = 0; i < _rowsData.size(); i++) {
 		_row* row = new _row(sf::Vector2f(_position.x, positionY), _font, _fontSize, _rowsData[i], _rowWidth, _rowHeight, i % 2 == 0 ? _rowColor1 : _rowColor2);
 		_rowDisplay.push_back(row);
 		positionY += _rowHeight;
+		currentRow++;
+		if (!_isScrollable && currentRow >= _totalRows) {
+			positionY = _position.y + _rowHeight;
+			currentRow = 0;
+		}
 	}
+
+	_pageNumber.setTotalPage(_rowDisplay.size() / _totalRows + 1);
 }
 
 void Table::_updateHeaders()
@@ -1680,21 +1850,48 @@ void Table::_updateHeaders()
 	}
 }
 
+void Table::_previousPage()
+{
+	if (_currentDisplayPage > 0) {
+		_currentDisplayPage--;
+		_pageNumber.setCurrentPage(_currentDisplayPage + 1);
+	}
+}
+
+void Table::_nextPage()
+{
+	if (_currentDisplayPage * _totalRows + _totalRows < _rowDisplay.size()) {
+		_currentDisplayPage++; _pageNumber.setCurrentPage(_currentDisplayPage + 1);
+	}
+}
+
+void Table::_setPageNumber(int pageNumber)
+{
+	pageNumber--;
+	if (pageNumber >= 0 && pageNumber < _rowDisplay.size() / _totalRows + 1) {
+		_currentDisplayPage = pageNumber;
+	}
+}
+
+
+
+
 BookDetailPopUp::BookDetailPopUp(const sf::Font& font, bool isPopUp, bool isEditable, std::function<void()> editFunction) :
-	_bookId(sf::Vector2f(300, 50), sf::Vector2f(1350, 300), font, 20, sf::Color::Transparent, L"书籍编号", L"", isEditable),
-	_bookName(sf::Vector2f(500, 100), sf::Vector2f(700, 300), font, 20, sf::Color::Transparent, L"书名", L"", isEditable),
-	_bookAuthor(sf::Vector2f(300, 100), sf::Vector2f(700, 420), font, 20, sf::Color::Transparent, L"作者", L"", isEditable),
-	_bookPublisher(sf::Vector2f(300, 100), sf::Vector2f(700, 540), font, 20, sf::Color::Transparent, L"出版社", L"", isEditable),
-	_publishDate(sf::Vector2f(300, 100), sf::Vector2f(700, 660), font, 20, sf::Color::Transparent, L"出版日期", L"", isEditable),
-	_bookCategory(sf::Vector2f(300, 100), sf::Vector2f(1200, 420), font, 20, sf::Color::Transparent, L"类别", { L"小说类", L"传记与回忆录", L"历史与文化", L"科学与自然", L"商业与经济", L"健康与生活方式", L"艺术与设计", L"语言与文学", L"参考手册", L"儿童读物", L"其他" }, isEditable),
-	_totalPage(sf::Vector2f(300, 100), sf::Vector2f(1200, 540), font, 20, sf::Color::Transparent, L"价格", L"", isEditable),
-	_bookPrice(sf::Vector2f(300, 100), sf::Vector2f(1200, 660), font, 20, sf::Color::Transparent, L"价格", L"", isEditable),
-	_bookAvailableStock(sf::Vector2f(300, 100), sf::Vector2f(700, 780), font, 20, sf::Color::Transparent, L"剩余量", L"", isEditable),
-	_bookTotalStock(sf::Vector2f(300, 100), sf::Vector2f(1200, 780), font, 20, sf::Color::Transparent, L"总量", L"", isEditable),
-	_bookDescription(sf::Vector2f(1200, 200), sf::Vector2f(300, 800), font, 20, sf::Color::Transparent, L"简述", L"", isEditable),
-	_bookImage(sf::Vector2f(200, 250), sf::Vector2f(250, 150), "Icon/blankBook.jpg"),
+	_bookName(sf::Vector2f(500, 100), sf::Vector2f(700, 230), font, 25, sf::Color::Transparent, L"书名", L"", isEditable),
+	_bookAuthor(sf::Vector2f(300, 100), sf::Vector2f(700, 280), font, 20, sf::Color::Transparent, L"作者", L"", isEditable),
+	_bookPublisher(sf::Vector2f(300, 100), sf::Vector2f(700, 330), font, 20, sf::Color::Transparent, L"出版社", L"", isEditable),
+	_publishDate(sf::Vector2f(300, 100), sf::Vector2f(700, 380), font, 20, sf::Color::Transparent, L"出版日期", L"", isEditable),
+	_bookId(sf::Vector2f(150, 50), sf::Vector2f(1350, 230), font, 20, sf::Color::Transparent, L"书籍编号", L"", isEditable),
+	_bookCategory(sf::Vector2f(300, 50), sf::Vector2f(1200, 280), font, 20, sf::Color::Transparent, L"类别", { L"小说类", L"传记与回忆录", L"历史与文化", L"科学与自然", L"商业与经济", L"健康与生活方式", L"艺术与设计", L"语言与文学", L"参考手册", L"儿童读物", L"其他" }, isEditable),
+	_totalPage(sf::Vector2f(300, 100), sf::Vector2f(1200, 330), font, 20, sf::Color::Transparent, L"价格", L"", isEditable),
+	_bookPrice(sf::Vector2f(300, 100), sf::Vector2f(1200, 380), font, 20, sf::Color::Transparent, L"价格", L"", isEditable),
+	_bookAvailableStock(sf::Vector2f(300, 100), sf::Vector2f(700, 430), font, 20, sf::Color::Transparent, L"剩余量", L"", isEditable),
+	_bookTotalStock(sf::Vector2f(300, 100), sf::Vector2f(1200, 430), font, 20, sf::Color::Transparent, L"总量", L"", isEditable),
+	_bookDescription(sf::Vector2f(1200, 200), sf::Vector2f(300, 600), font, 20, sf::Color::Transparent, L"简述", L"", isEditable),
+	_bookImage(sf::Vector2f(270, 350), sf::Vector2f(300, 200), "Icon/blankBook.jpg"),
 	_closeButton(sf::Vector2f(100, 100), sf::Vector2f(1600, 120), "Icon/closeButton.png", [&]() {_closePopUp(); }),
-	_editFunction(editFunction)
+	_editFunction(editFunction),
+	_isPopUp(isPopUp)
 {
 	_mask.setSize(sf::Vector2f(1920, 1080));
 	_mask.setPosition(sf::Vector2f(0, 0));
@@ -1717,6 +1914,7 @@ void BookDetailPopUp::setBook(Book* book)
 	_bookAuthor.setText(book->getAuthor());
 	_bookPublisher.setText(book->getPublisher());
 	_bookCategory.setText(book->getCategoryName());
+	_totalPage.setText(std::to_wstring(book->getPages()));
 	_publishDate.setText(book->getPublishDate().getWDate());
 	_bookPrice.setText(std::to_wstring(book->getPrice()));
 	_bookAvailableStock.setText(std::to_wstring(book->getRemainBook()));
@@ -1737,6 +1935,7 @@ void BookDetailPopUp::setEditable(bool isEditable)
 	_bookAuthor.setEditable(isEditable);
 	_bookPublisher.setEditable(isEditable);
 	_bookCategory.setEditable(isEditable);
+	_totalPage.setEditable(isEditable);
 	_publishDate.setEditable(isEditable);
 	_bookPrice.setEditable(isEditable);
 	_bookAvailableStock.setEditable(isEditable);
@@ -1757,6 +1956,7 @@ void BookDetailPopUp::handleEvent(const sf::Event& event, sf::RenderWindow& wind
 		_bookAuthor.handleEvent(event, window);
 		_bookPublisher.handleEvent(event, window);
 		_bookCategory.handleEvent(event, window);
+		_totalPage.handleEvent(event, window);
 		_publishDate.handleEvent(event, window);
 		_bookPrice.handleEvent(event, window);
 		_bookAvailableStock.handleEvent(event, window);
@@ -1764,6 +1964,23 @@ void BookDetailPopUp::handleEvent(const sf::Event& event, sf::RenderWindow& wind
 		_bookDescription.handleEvent(event, window);
 		_bookImage.handleEvent(event, window);
 		_closeButton.handleEvent(event, window);
+	}
+}
+
+void BookDetailPopUp::update(sf::Time dt)
+{
+	if (_isPopUp) {
+		_bookId.update(dt);
+		_bookName.update(dt);
+		_bookAuthor.update(dt);
+		_bookPublisher.update(dt);
+		_bookCategory.update(dt);
+		_totalPage.update(dt);
+		_publishDate.update(dt);
+		_bookPrice.update(dt);
+		_bookAvailableStock.update(dt);
+		_bookTotalStock.update(dt);
+		_bookDescription.update(dt);
 	}
 }
 
@@ -1776,7 +1993,7 @@ void BookDetailPopUp::render(sf::RenderWindow& window)
 		_bookName.render(window);
 		_bookAuthor.render(window);
 		_bookPublisher.render(window);
-		_bookCategory.render(window);
+		_totalPage.render(window);
 		_publishDate.render(window);
 		_bookPrice.render(window);
 		_bookAvailableStock.render(window);
@@ -1784,6 +2001,7 @@ void BookDetailPopUp::render(sf::RenderWindow& window)
 		_bookDescription.render(window);
 		_bookImage.render(window);
 		_closeButton.render(window);
+		_bookCategory.render(window);
 	}
 }
 

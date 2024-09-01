@@ -41,7 +41,7 @@ void RecordsPage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 
 void RecordsPage::update(sf::Time dt)
 {
-
+	_table.update(dt);
 }
 
 void RecordsPage::render(sf::RenderWindow& window)
@@ -62,12 +62,19 @@ void RecordsPage::render(sf::RenderWindow& window)
 
 void RecordsPage::onEnter()
 {
-	_showBorrowRecords();
-
 	if (_user.getSelfUserInfo().getRole() != UserType::Guest) {
 		_topBarButton6.setText(L"登出");
 		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
 	}
+
+	_topBarButton1.setButtonState(ButtonState::normal);
+	_topBarButton2.setButtonState(ButtonState::normal);
+	_topBarButton3.setButtonState(ButtonState::normal);
+	_topBarButton4.setButtonState(ButtonState::normal);
+	_topBarButton5.setButtonState(ButtonState::normal);
+	_topBarButton6.setButtonState(ButtonState::normal);
+	
+	_showBorrowRecords();
 }
 
 void RecordsPage::_showBorrowRecords()
@@ -82,7 +89,7 @@ void RecordsPage::_showBorrowRecords()
 		std::vector<Book> books;
 
 		for (size_t i = 0; i < borrowBookDetailList.size(); i++) {
-			Book book = _user.getBookInfoById(borrowBookDetailList[i].getBookId());
+			Book book(borrowBookDetailList[i].getBookId());
 			rows.push_back({ std::to_wstring(i + 1), book.getBookName(), borrowBookDetailList[i].getBorrowDate().getWDate(), borrowBookDetailList[i].getDueDate().getWDate(), borrowBookDetailList[i].getReturnDate().getWDate() });
 			books.push_back(book);
 		}

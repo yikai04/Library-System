@@ -265,6 +265,36 @@ Date& Date::operator=(const Date& date) {
     return *this;
 }
 
+// Equality operator
+bool Date::operator==(const Date& date) const {
+    return std::mktime(const_cast<std::tm*>(&this->dateStruct)) == std::mktime(const_cast<std::tm*>(&date.dateStruct));
+}
+
+// Inequality operator
+bool Date::operator!=(const Date& date) const {
+    return !(*this == date);
+}
+
+// Less-than operator
+bool Date::operator<(const Date& date) const {
+    return std::mktime(const_cast<std::tm*>(&this->dateStruct)) < std::mktime(const_cast<std::tm*>(&date.dateStruct));
+}
+
+// Greater-than operator
+bool Date::operator>(const Date& date) const {
+    return std::mktime(const_cast<std::tm*>(&this->dateStruct)) > std::mktime(const_cast<std::tm*>(&date.dateStruct));
+}
+
+// Less-than or equal-to operator
+bool Date::operator<=(const Date& date) const {
+    return !(*this > date);
+}
+
+// Greater-than or equal-to operator
+bool Date::operator>=(const Date& date) const {
+    return !(*this < date);
+}
+
 // Destructor
 Date::~Date() {
     // No dynamic memory to clean up

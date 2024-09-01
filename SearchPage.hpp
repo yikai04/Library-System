@@ -7,6 +7,7 @@ class SearchPage : public PageBase
     public:
         SearchPage(User& user, PageManager& pageManager);
         ~SearchPage();
+		void search(std::wstring searchText);
         void handleEvent(const sf::Event& event, sf::RenderWindow& window);
         void update(sf::Time dt);
         void render(sf::RenderWindow& window);
@@ -15,6 +16,7 @@ class SearchPage : public PageBase
     protected:
         void _searchBarHandler();
         void _logoutHandler();
+        void _bookDetailPopUpHandler(Book* book);
 
     private:
         sf::Texture _backgroundTexture;
@@ -29,4 +31,5 @@ class SearchPage : public PageBase
 
 		BooksDisplayInPage _booksDisplay;
         SearchBar _searchBar;
+        BookDetailPopUp _bookDetailPopUp;
 };
