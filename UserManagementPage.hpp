@@ -2,24 +2,20 @@
 #include "PageBase.hpp"
 #include "Widgets.hpp"
 
-class SearchPage : public PageBase
+class UserManagementPage : public PageBase
 {
     public:
-        SearchPage(User& user, PageManager& pageManager);
-        ~SearchPage();
-		void search(std::wstring searchText);
+        UserManagementPage(User& user, PageManager& pageManager);
+        ~UserManagementPage();
         void handleEvent(const sf::Event& event, sf::RenderWindow& window);
         void update(sf::Time dt);
         void render(sf::RenderWindow& window);
         void onEnter();
 
     protected:
-        void _searchBarHandler();
         void _logoutHandler();
-        void _bookDetailPopUpHandler(Book* book);
-		bool _editBookHandler(Book* book);
-		void _deleteBookHandler(Book* book);
-		void _newBookHandler();
+        void _showUsersDetail();
+		void _editUserHandler(UserInfo user);
 
     private:
         sf::Texture _backgroundTexture;
@@ -32,11 +28,5 @@ class SearchPage : public PageBase
         TextToogleButton _topBarButton5;
         TextToogleButton _topBarButton6;
 
-		BooksDisplayInPage _booksDisplay;
-        SearchBar _searchBar;
-        BookDetailPopUp _bookDetailPopUp;
-		TextToogleButton _newBookButton;
-
-        bool _isNewBookButtonClicked;
-		//IconButton _newBookButton2;
+        Table _table;
 };

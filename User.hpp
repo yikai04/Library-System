@@ -20,15 +20,11 @@ class User
 
 		bool borrowBook(int userId, int bookId);
 		bool returnBook(int bookId);
-		//void addBook(Book book);
-		//void deleteBook(int bookId);
-		//void updateBookInfo(Book book);
-
 
 	private:
 		sf::RenderWindow _window;
 		sf::Clock _clock;
 		PageManager _pageManager;
 
-		UserInfo _userInfo;
+		UserInfo _userSelfInfo;
 };

@@ -14,16 +14,15 @@ SearchPage::SearchPage(User& user, PageManager& pageManager) :
 
 	_booksDisplay(_font, [&](Book* book) {_bookDetailPopUpHandler(book); }),
 	_searchBar(700.0, sf::Vector2f(650, 220), L"搜索", _font, 42, [&]() {_searchBarHandler(); }),
-	_bookDetailPopUp(_font, false, true)
+	_bookDetailPopUp(_font, false, false, false, [&](Book* book) {return _editBookHandler(book); }, [&](Book* book) {_deleteBookHandler(book); }),
+	_newBookButton(sf::Vector2f(150, 70), sf::Vector2f(1680, 250), sf::Color::Transparent, L"增加书籍", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_newBookHandler(); }),
+	_isNewBookButtonClicked(false)
 {
 	_backgroundTexture.loadFromFile("Image/Background(1920x1080).png");
 
 	_sprite.setScale(1, 1);
 	_sprite.setPosition(0, 0);
 	_sprite.setTexture(_backgroundTexture);
-
-	std::vector<Book> allBooks = Book::searchBooksInfo();
-	_booksDisplay.setBooks(std::move(allBooks));
 }
 
 SearchPage::~SearchPage()
@@ -55,6 +54,10 @@ void SearchPage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 	if (!_searchBar.getDropDownVisibility()) {
 		_booksDisplay.handleEvent(event, window);
 	}
+
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		_newBookButton.handleEvent(event, window);
+	}
 }
 
 void SearchPage::update(sf::Time dt)
@@ -77,6 +80,11 @@ void SearchPage::render(sf::RenderWindow& window)
 
 	_booksDisplay.render(window);
 	_searchBar.render(window);
+
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		_newBookButton.render(window);
+	}
+
 	_bookDetailPopUp.render(window);
 	//window.display() called in main.cpp
 }
@@ -88,12 +96,33 @@ void SearchPage::onEnter()
 		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
 	}
 
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin)
+	{
+		_topBarButton5.setText(L"用户管理");
+		_topBarButton5.setOnClickHandler([&]() {_pageManager.setPage(Page::UserManagement); });
+	}
+	else if (_user.getSelfUserInfo().getRole() == UserType::Student || _user.getSelfUserInfo().getRole() == UserType::Teacher)
+	{
+		_topBarButton5.setText(L"用户设置");
+		_topBarButton5.setOnClickHandler([&]() {_pageManager.setPage(Page::Setting); });
+	}
+
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		_bookDetailPopUp.setEditable(true);
+	}
+	else {
+		_bookDetailPopUp.setEditable(false);
+	}
+
 	_topBarButton1.setButtonState(ButtonState::normal);
 	_topBarButton2.setButtonState(ButtonState::normal);
 	_topBarButton3.setButtonState(ButtonState::normal);
 	_topBarButton4.setButtonState(ButtonState::normal);
 	_topBarButton5.setButtonState(ButtonState::normal);
 	_topBarButton6.setButtonState(ButtonState::normal);
+
+	std::vector<Book> allBooks = Book::searchBooksInfo();
+	_booksDisplay.setBooks(std::move(allBooks));
 }
 
 void SearchPage::_searchBarHandler()
@@ -130,5 +159,49 @@ void SearchPage::_logoutHandler()
 void SearchPage::_bookDetailPopUpHandler(Book* book)
 {
 	_bookDetailPopUp.setBook(book);
-	_bookDetailPopUp.setPopUpVisiblity(true);
+	_bookDetailPopUp.setPopUpVisiblity(true, false);
+
+}
+
+bool SearchPage::_editBookHandler(Book* book)
+{
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		if (_isNewBookButtonClicked) {
+			_isNewBookButtonClicked = false;
+			int status = book->addBook(book);
+			if (status == SUCESSFUL) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		else {
+			int status = book->updateBook(book);
+			if (status == SUCESSFUL) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+	}
+	else {
+		return false;
+	}
+}
+
+void SearchPage::_deleteBookHandler(Book* book)
+{
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		book->deleteBook(book);
+	}
+}
+
+void SearchPage::_newBookHandler()
+{
+	_bookDetailPopUp.setPopUpVisiblity(true, true);
+	_isNewBookButtonClicked = true;
+	Book* newBook = new Book();
+	_bookDetailPopUp.setBook(newBook);
 }

@@ -71,6 +71,17 @@ void LoginPage::render(sf::RenderWindow& window)
 
 void LoginPage::onEnter()
 {
+    if (_user.getSelfUserInfo().getRole() == UserType::Admin)
+    {
+        _topBarButton5.setText(L"用户管理");
+        _topBarButton5.setOnClickHandler([&]() {_pageManager.setPage(Page::UserManagement); });
+    }
+    else if (_user.getSelfUserInfo().getRole() == UserType::Student || _user.getSelfUserInfo().getRole() == UserType::Teacher)
+    {
+        _topBarButton5.setText(L"用户设置");
+        _topBarButton5.setOnClickHandler([&]() {_pageManager.setPage(Page::Setting); });
+    }
+
     _topBarButton1.setButtonState(ButtonState::normal);
     _topBarButton2.setButtonState(ButtonState::normal);
     _topBarButton3.setButtonState(ButtonState::normal);

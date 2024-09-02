@@ -13,7 +13,8 @@ enum class Page
     Signup,
     Records,
 	Statistics,
-    Setting
+    Setting,
+	UserManagement
 };
 
 class User;
@@ -27,6 +28,7 @@ class PageManager
         void setPage(Page newPage);
         Page getLastPage();
 		void homePageSearch(std::wstring searchText);
+		void userManagementPageSearch(std::wstring searchText);
         void handleEvent(const sf::Event& event, sf::RenderWindow& window);
         void update(sf::Time dt);
         void render(sf::RenderWindow& window);

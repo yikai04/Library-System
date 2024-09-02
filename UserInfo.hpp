@@ -12,6 +12,7 @@ enum UserType
 
 UserType stringToUserType(const std::string& str);
 std::string userTypeToString(UserType type);
+std::wstring userTypeToWString(UserType type);
 
 class UserInfo
 {

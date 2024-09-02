@@ -32,6 +32,21 @@ std::string userTypeToString(UserType type)
 	}
 }
 
+std::wstring userTypeToWString(UserType type)
+{
+	switch (type)
+	{
+	case UserType::Student:
+		return L"学生";
+	case UserType::Teacher:
+		return L"教师";
+	case UserType::Admin:
+		return L"管理员";
+	default:
+		return L"游客";
+	}
+}
+
 UserInfo::UserInfo() :
 	_userId(-1),
 	_username(L""),
@@ -553,6 +568,11 @@ bool UserInfo::checkUsernameValidaty(std::wstring username)
 //@return true if the id is valid(not exist), false otherwise
 bool UserInfo::checkIdValidaty(int id)
 {
+	std::regex digitRegex("^\\d+$");
+	if (!std::regex_match(std::to_string(id), digitRegex)) {
+		return false;
+	}
+
 	const char* sql = "SELECT * FROM user_info WHERE id = ?";
 	int rc;
 	sqlite3_stmt* stmt;

@@ -102,6 +102,67 @@ bool validatePassword(const std::string& password, const std::string& hash)
 	return BCrypt::validatePassword(password, hash);
 }
 
+//@return true if the string is not empty
+bool checkStringValidaty(std::wstring str)
+{
+	if (str.empty()) {
+		return false;
+	}
+	return true;
+}
+
+//@return true if the string is a positive integer
+bool checkIntValidaty(std::wstring str)
+{
+	if (str.empty()) {
+		return false;
+	}
+	std::wregex intPattern(L"\\d+");
+	if (!std::regex_match(str, intPattern)) {
+		return false;
+	}
+	return true;
+}
+
+//@return true if the string is a positive double
+bool checkDoubleValidaty(std::wstring str)
+{
+	if (str.empty()) {
+		return false;
+	}
+	std::wregex doublePattern(L"\\d+(\\.\\d+)?");
+	if (!std::regex_match(str, doublePattern)) {
+		return false;
+	}
+	return true;
+}
+
+//@return true if the string is a valid date
+bool checkDateValidaty(std::wstring date)
+{
+	if (date.empty()) {
+		return false;
+	}
+	std::wregex datePattern(L"\\d{4}-\\d{2}-\\d{2}");
+	if (!std::regex_match(date, datePattern)) {
+		return false;
+	}
+	return true;
+}
+
+bool checkImgUrlValidaty(std::string url)
+{
+	if (url.empty()) {
+		return false;
+	}
+	
+	//sf::Image img;
+	//if (!img.loadFromFile(url)) {
+	//	return false;
+	//}
+
+	return true;
+}
 
 
 //Date::Date():
@@ -237,7 +298,7 @@ bool validatePassword(const std::string& password, const std::string& hash)
 
 // Default constructor
 Date::Date() {
-    setTodayDate();
+    isNullDate = true;
 }
 
 // Copy constructor

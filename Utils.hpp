@@ -5,9 +5,20 @@
 #define INVALID_ID 2
 #define INVALID_EMAIL 3
 #define INVALID_NAME 4
-#define WRONG_PASSWORD 5
-#define SQLITE_DATABASE_ERROR 6
-#define REGISTER_SUCESSFUL 7
+#define INVALID_AUTHOR 5
+#define INVALID_PUBLISHER 6
+#define INVALID_CATEGORY 7
+#define INVALID_DATE 8
+#define INVALID_PAGES 9
+#define INVALID_PRICE 10
+#define INVALID_REMAIN_BOOK 11
+#define INVALID_TOTAL_BOOK 12
+#define INVALID_DESCRIPTION 13
+#define INVALID_IMG_URL 14
+#define WRONG_PASSWORD 15
+#define SQLITE_DATABASE_ERROR 16
+#define SUCESSFUL 17
+#define ID_EXIST 18
 
 #include "Dependencies/sqlite3/sqlite3.h"
 #include "Dependencies/Bcrypt/BCrypt.hpp"
@@ -18,7 +29,7 @@ constexpr const char* CREATE_USER_INFO_TABLE_SQLCMD = "CREATE TABLE IF NOT EXIST
 														`id` INT(11) NOT NULL , \
 														`name` varchar(200) DEFAULT NULL , \
 														`username` varchar(50) DEFAULT NULL , \
-														`password` varchar(100) DEFAULT NULL , \
+														`password` varchar(200) DEFAULT NULL , \
 														`role` varchar(50) DEFAULT 'Student' , \
 														`register_date` date DEFAULT NULL , \
 														`gender` varchar(1) DEFAULT NULL , \
@@ -67,6 +78,12 @@ std::string wstring_to_string(const std::wstring& wstr);
 
 std::string hashPassword(const std::string& password);
 bool validatePassword(const std::string& password, const std::string& hash);
+
+bool checkStringValidaty(std::wstring str);
+bool checkIntValidaty(std::wstring str);
+bool checkDoubleValidaty(std::wstring str);
+bool checkDateValidaty(std::wstring date);
+bool checkImgUrlValidaty(std::string url);
 
 //class Date
 //{

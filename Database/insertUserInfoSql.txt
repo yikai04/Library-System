@@ -1,2 +1,2 @@
-INSERT INTO `user_info` VALUES ('2023080001', '黄小明', 'xiaoming', '$2a$12$ZYNlHb.ImGL0mTbJRGbUA.cVXM7rXfojsSB5gu7ZotRbcBXPha26O', 'Student',  '2024-07-26', 'M', 'xiaoming@qq.com', '19', '0');
+INSERT INTO `user_info` VALUES ('2023080001', '黄小明', 'xiaoming', '$2a$12$ZYNlHb.ImGL0mTbJRGbUA.cVXM7rXfojsSB5gu7ZotRbcBXPha26O', 'Admin',  '2024-07-26', 'M', 'xiaoming@qq.com', '19', '0');
 INSERT INTO `user_info` VALUES ('2023080002', '叶小华', 'xiaohua', '$2a$12$Nsi7pdQ8.3nXMSR3Wmd5LebHA.Dq.neSMi35mU8m9XCOtX7paIIWy', 'Teacher',  '2024-08-15', 'M', 'xiaohua@qq.com', '0', '0');

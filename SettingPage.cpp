@@ -22,7 +22,9 @@ SettingPage::SettingPage(User& user, PageManager& pageManager) :
 	_password(480.f, sf::Vector2f(420, 790), _font, 35, L"密码", sf::Color::Transparent, true),
 	_confirmPassword(430.f, sf::Vector2f(420, 900), _font, 35, L"确认密码", sf::Color::Transparent, true),
 	_changePasswordButton(sf::Vector2f(50, 50), sf::Vector2f(850, 900), "Icon/tickIcon.png", [&]() {_updatePassword(); }),
-	_deleteAccountButton(sf::Vector2f(600, 50), sf::Vector2f(1550, 250), sf::Color::Transparent, L"注销账号", _font, 30, 33, sf::Color::Red, sf::Color::Red, [&]() {_deleteAccountHandler(); }, true)
+	_deleteAccountButton(sf::Vector2f(600, 50), sf::Vector2f(1550, 250), sf::Color::Transparent, L"注销账号", _font, 30, 33, sf::Color::Red, sf::Color::Red, [&]() {_deleteAccountHandler(); }, true),
+
+	_adminEditingUser(UserInfo())
 {
 	_backgroundTexture.loadFromFile("Image/SettingPage.png");
 
@@ -35,6 +37,11 @@ SettingPage::SettingPage(User& user, PageManager& pageManager) :
 SettingPage::~SettingPage()
 {
 
+}
+
+void SettingPage::search(std::wstring searchText)
+{
+	_adminEditingUser.setUserId(std::stoi(searchText));
 }
 
 void SettingPage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
@@ -98,6 +105,10 @@ void SettingPage::render(sf::RenderWindow& window)
 
 void SettingPage::onEnter()
 {
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		_pageManager.setPage(Page::UserManagement);
+	}
+
 	if (_user.getSelfUserInfo().getRole() != UserType::Guest) {
 		_topBarButton6.setText(L"登出");
 		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
@@ -125,7 +136,7 @@ void SettingPage::_showUserInfo()
 {
 	UserInfo userInfo = _user.getSelfUserInfo();
 	if (userInfo.getRole() == UserType::Admin) {
-
+		
 	}
 	else if (userInfo.getRole() == UserType::Student || userInfo.getRole() == UserType::Teacher) {
 		_username.setText(userInfo.getUsername());
@@ -161,41 +172,66 @@ void SettingPage::_deleteAccountHandler()
 
 bool SettingPage::_updateUsername()
 {
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		return _adminEditingUser.changeUsername(_username.getText());
+	}
 	return _user.getSelfUserInfo().changeUsername(_username.getText());
 }
 
 bool SettingPage::_updateEmail()
 {
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		return _adminEditingUser.changeEmail(_email.getText());
+	}
 	return _user.getSelfUserInfo().changeEmail(_email.getText());
 }
 
 bool SettingPage::_updateName()
 {
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		return _adminEditingUser.changeName(_name.getText());
+	}
 	return _user.getSelfUserInfo().changeName(_name.getText());
 }
 
 bool SettingPage::_updateId()
 {
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		return _adminEditingUser.changeId(_id.getText());
+	}
 	return _user.getSelfUserInfo().changeId(_id.getText());
 }
 
 bool SettingPage::_updateGender()
 {
-
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		return _adminEditingUser.changeGender(_gender.getText());
+	}
 	return _user.getSelfUserInfo().changeGender(_gender.getText());
 }
 
 bool SettingPage::_updateRole()
 {
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		return _adminEditingUser.changeRole(_role.getText());
+	}
 	return _user.getSelfUserInfo().changeRole(_role.getText());
 }
 
 void SettingPage::_updatePassword()
 {
 	if (_password.getText() == _confirmPassword.getText()) {
-		if (_user.getSelfUserInfo().changePassword(_password.getText())) {
-			_password.setText(L"");
-			_confirmPassword.setText(L"");
+		if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+			if (_adminEditingUser.changePassword(_password.getText())) {
+				_password.setText(L"");
+				_confirmPassword.setText(L"");
+			}
+		}
+		else {
+			if (_user.getSelfUserInfo().changePassword(_password.getText())) {
+				_password.setText(L"");
+				_confirmPassword.setText(L"");
+			}
 		}
 	}
 }

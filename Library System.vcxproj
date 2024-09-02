@@ -147,7 +147,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BarChart.hpp" />
     <ClInclude Include="Book.hpp" />
     <ClInclude Include="BorrowBookDetail.hpp" />
     <ClInclude Include="Config.h" />
@@ -170,11 +169,11 @@
     <ClInclude Include="StatisticsPage.hpp" />
     <ClInclude Include="User.hpp" />
     <ClInclude Include="UserInfo.hpp" />
+    <ClInclude Include="UserManagementPage.hpp" />
     <ClInclude Include="Utils.hpp" />
     <ClInclude Include="Widgets.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BarChart.cpp" />
     <ClCompile Include="Book.cpp" />
     <ClCompile Include="BorrowBookDetail.cpp" />
     <ClCompile Include="Dependencies\Bcrypt\bcrypt.c" />
@@ -196,6 +195,7 @@
     <ClCompile Include="StatisticsPage.cpp" />
     <ClCompile Include="User.cpp" />
     <ClCompile Include="UserInfo.cpp" />
+    <ClCompile Include="UserManagementPage.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="Widgets.cpp" />
   </ItemGroup>

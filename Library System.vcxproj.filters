@@ -87,7 +87,7 @@
     <ClInclude Include="UserInfo.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BarChart.hpp">
+    <ClInclude Include="UserManagementPage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -161,7 +161,7 @@
     <ClCompile Include="UserInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BarChart.cpp">
+    <ClCompile Include="UserManagementPage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

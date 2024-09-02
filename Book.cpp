@@ -5,47 +5,47 @@ BookCategory getCategoryByName(std::wstring categoryName)
 {
 	if (categoryName == L"小说类")
 	{
-		return Fiction;
+		return BookCategory::Fiction;
 	}
 	else if (categoryName == L"传记与回忆录")
 	{
-		return BiographiesMemoirs;
+		return BookCategory::BiographiesMemoirs;
 	}
 	else if (categoryName == L"历史与文化")
 	{
-		return HistoryCulture;
+		return BookCategory::HistoryCulture;
 	}
 	else if (categoryName == L"科学与自然")
 	{
-		return ScienceNature;
+		return BookCategory::ScienceNature;
 	}
 	else if (categoryName == L"商业与经济")
 	{
-		return BusinessEconomics;
+		return BookCategory::BusinessEconomics;
 	}
 	else if (categoryName == L"健康与生活方式")
 	{
-		return HealthLifestyle;
+		return BookCategory::HealthLifestyle;
 	}
 	else if (categoryName == L"艺术与设计")
 	{
-		return ArtDesign;
+		return BookCategory::ArtDesign;
 	}
 	else if (categoryName == L"语言与文学")
 	{
-		return LanguageLiterature;
+		return BookCategory::LanguageLiterature;
 	}
 	else if (categoryName == L"参考手册")
 	{
-		return ReferenceManuals;
+		return BookCategory::ReferenceManuals;
 	}
 	else if (categoryName == L"儿童读物")
 	{
-		return ChildrensBooks;
+		return BookCategory::ChildrensBooks;
 	}
 	else
 	{
-		return Others;
+		return BookCategory::Others;
 	}
 }
 
@@ -53,27 +53,27 @@ std::wstring getCategoryNameByCategory(BookCategory category)
 {
 	switch (category)
 	{
-	case Fiction:
+	case BookCategory::Fiction:
 		return L"小说类";
-	case BiographiesMemoirs:
+	case BookCategory::BiographiesMemoirs:
 		return L"传记与回忆录";
-	case HistoryCulture:
+	case BookCategory::HistoryCulture:
 		return L"历史与文化";
-	case ScienceNature:
+	case BookCategory::ScienceNature:
 		return L"科学与自然";
-	case BusinessEconomics:
+	case BookCategory::BusinessEconomics:
 		return L"商业与经济";
-	case HealthLifestyle:
+	case BookCategory::HealthLifestyle:
 		return L"健康与生活方式";
-	case ArtDesign:
+	case BookCategory::ArtDesign:
 		return L"艺术与设计";
-	case LanguageLiterature:
+	case BookCategory::LanguageLiterature:
 		return L"语言与文学";
-	case ReferenceManuals:
+	case BookCategory::ReferenceManuals:
 		return L"参考手册";
-	case ChildrensBooks:
+	case BookCategory::ChildrensBooks:
 		return L"儿童读物";
-	case Others:
+	case BookCategory::Others:
 		return L"其他";
 	default:
 		return L"其他";
@@ -250,10 +250,247 @@ bool Book::getDelFlg()
 	return _delFlg;
 }
 
+bool Book::setBookId(std::wstring id)
+{
+	if (!checkIntValidaty(id))
+	{
+		return false;
+	}
+
+	try {
+		_id = std::stoi(id);
+	}
+	catch (...)
+	{
+		return false;
+	}
+	
+	return true;
+}
+
+bool Book::setBookName(std::wstring bookName)
+{
+	if (!checkStringValidaty(bookName))
+	{
+		return false;
+	}
+
+	try {
+		_bookName = bookName;
+	}
+	catch (...)
+	{
+		return false;
+	}
+	
+	return true;
+}
+
+bool Book::setAuthor(std::wstring author)
+{
+	if (!checkStringValidaty(author))
+	{
+		return false;
+	}
+
+	try {
+		_author = author;
+	}
+	catch (...)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Book::setPublisher(std::wstring publisher)
+{
+	if (!checkStringValidaty(publisher))
+	{
+		return false;
+	}
+
+	try {
+		_publisher = publisher;
+	}
+	catch (...)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Book::setCategory(std::wstring category)
+{
+	if (!checkStringValidaty(category))
+	{
+		return false;
+	}
+
+	try {
+		_category = getCategoryByName(category);
+	}
+	catch (...)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Book::setPublishDate(Date publishDate)
+{
+	if (publishDate.getDate() == "NULL")
+	{
+		return false;
+	}
+
+	try {
+		_publishDate = publishDate;
+	}
+	catch (...)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Book::setPages(std::wstring pages)
+{
+	if (!checkIntValidaty(pages))
+	{
+		return false;
+	}
+
+	try {
+		_pages = std::stoi(pages);
+	}
+	catch (...)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Book::setTotalBook(std::wstring totalBook)
+{
+	if (!checkIntValidaty(totalBook))
+	{
+		return false;
+	}
+
+	try {
+		_totalBook = std::stoi(totalBook);
+	}
+	catch (...)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Book::setRemainBook(std::wstring remainBook)
+{
+	if (!checkIntValidaty(remainBook))
+	{
+		return false;
+	}
+
+	try {
+		_remainBook = std::stoi(remainBook);
+	}
+	catch (...)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Book::setPrice(std::wstring price)
+{
+	if (!checkDoubleValidaty(price))
+	{
+		return false;
+	}
+
+	try {
+		_price = std::stod(price);
+	}
+	catch (...)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Book::setDescription(std::wstring description)
+{
+	if (!checkStringValidaty(description))
+	{
+		return false;
+	}
+
+	try {
+		_description = description;
+	}
+	catch (...)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Book::setImgUrl(std::string imgUrl)
+{
+	if (!checkImgUrlValidaty(imgUrl))
+	{
+		return false;
+	}
+
+	try {
+		_imgUrl = imgUrl;
+	}
+	catch (...)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Book::setBorrowVolume(std::wstring borrowVolume)
+{
+	if (!checkIntValidaty(borrowVolume))
+	{
+		return false;
+	}
+
+	_borrowVolume = std::stoi(borrowVolume);
+	return true;
+}
+
+bool Book::setDelFlg(std::wstring delFlg)
+{
+	if (!checkIntValidaty(delFlg))
+	{
+		return false;
+	}
+
+	_delFlg = std::stoi(delFlg);
+	return true;
+}
+
 bool Book::changeBookId(std::wstring id)
 {
-	std::regex digitRegex("^\\d+$");
-	if (!std::regex_match(wstring_to_string(id), digitRegex)) {
+	if (!checkIntValidaty(id)) {
 		return false;
 	}
 
@@ -264,7 +501,7 @@ bool Book::changeBookId(std::wstring id)
 		return true;
 	}
 
-	if (!_checkBookIdValidaty(idInt))
+	if (!checkBookIdValidaty(idInt))
 	{
 		return false;
 	}
@@ -301,8 +538,7 @@ bool Book::changeBookId(std::wstring id)
 
 bool Book::changeBookName(std::wstring bookName)
 {
-	if (bookName == L"")
-	{
+	if (!checkStringValidaty(bookName)) {
 		return false;
 	}
 
@@ -343,7 +579,7 @@ bool Book::changeBookName(std::wstring bookName)
 
 bool Book::changeAuthor(std::wstring author)
 {
-	if (author == L"")
+	if (!checkStringValidaty(author))
 	{
 		return false;
 	}
@@ -385,8 +621,7 @@ bool Book::changeAuthor(std::wstring author)
 
 bool Book::changePublisher(std::wstring publisher)
 {
-	if (publisher == L"")
-	{
+	if (!checkStringValidaty(publisher)) {
 		return false;
 	}
 
@@ -427,8 +662,7 @@ bool Book::changePublisher(std::wstring publisher)
 
 bool Book::changeCategory(std::wstring category)
 {
-	if (category == L"")
-	{
+	if (!checkStringValidaty(category)) {
 		return false;
 	}
 
@@ -470,6 +704,11 @@ bool Book::changeCategory(std::wstring category)
 
 bool Book::changePublishDate(Date publishDate)
 {
+	if (publishDate.getDate() == "NULL")
+	{
+		return false;
+	}
+
 	if (_publishDate == publishDate)
 	{
 		return true;
@@ -508,8 +747,8 @@ bool Book::changePublishDate(Date publishDate)
 
 bool Book::changePages(std::wstring pages)
 {
-	std::regex digitRegex("^\\d+$");
-	if (!std::regex_match(wstring_to_string(pages), digitRegex)) {
+	if (!checkIntValidaty(pages))
+	{
 		return false;
 	}
 
@@ -551,8 +790,8 @@ bool Book::changePages(std::wstring pages)
 
 bool Book::changeTotalBook(std::wstring totalBook)
 {
-	std::regex digitRegex("^\\d+$");
-	if (!std::regex_match(wstring_to_string(totalBook), digitRegex)) {
+	if (!checkIntValidaty(totalBook))
+	{
 		return false;
 	}
 
@@ -594,8 +833,7 @@ bool Book::changeTotalBook(std::wstring totalBook)
 
 bool Book::changeRemainBook(std::wstring remainBook)
 {
-	std::regex digitRegex("^\\d+$");
-	if (!std::regex_match(wstring_to_string(remainBook), digitRegex)) {
+	if (!checkIntValidaty(remainBook)) {
 		return false;
 	}
 
@@ -637,8 +875,7 @@ bool Book::changeRemainBook(std::wstring remainBook)
 
 bool Book::changePrice(std::wstring price)
 {
-	std::regex digitRegex("^\\d+(\\.\\d+)?$");
-	if (!std::regex_match(wstring_to_string(price), digitRegex)) {
+	if (!checkDoubleValidaty(price)) {
 		return false;
 	}
 
@@ -680,9 +917,8 @@ bool Book::changePrice(std::wstring price)
 
 bool Book::changeDescription(std::wstring description)
 {
-	if (_description == description)
-	{
-		return true;
+	if (!checkStringValidaty(description)) {
+		return false;
 	}
 
 	const char* sql = "UPDATE book_info SET description = ? WHERE id = ?";
@@ -717,6 +953,11 @@ bool Book::changeDescription(std::wstring description)
 
 bool Book::changeImgUrl(std::string imgUrl)
 {
+	if (!checkImgUrlValidaty(imgUrl))
+	{
+		return false;
+	}
+
 	if (_imgUrl == imgUrl)
 	{
 		return true;
@@ -781,6 +1022,36 @@ bool Book::addBorrowVolume()
 		sqlite3_finalize(stmt);
 		return false;
 	}
+}
+
+std::vector<Book> Book::getBooksByCategory(BookCategory category)
+{
+	std::vector<Book> books;
+	const char* sql = "SELECT id FROM book_info WHERE category = ?";
+	int rc;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return books;
+	}
+
+	std::wstring categoryName = getCategoryNameByCategory(category);
+	rc = sqlite3_bind_text16(stmt, 1, categoryName.c_str(), -1, SQLITE_STATIC);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Failed to bind category: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return books;
+	}
+
+	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+		int id = sqlite3_column_int(stmt, 0);
+		books.push_back(Book(id));
+	}
+
+	sqlite3_finalize(stmt);
+	return books;
 }
 
 std::vector<Book> Book::getAllBooks()
@@ -1031,38 +1302,153 @@ std::vector<Book> Book::searchBooksInfoByPublisher(std::wstring publisher, const
 	return books;
 }
 
-std::vector<Book> Book::getBooksByCategory(BookCategory category)
+int Book::addBook(Book* book)
 {
-	std::vector<Book> books;
-	const char* sql = "SELECT id FROM book_info WHERE category = ?";
+	if (!checkBookIdValidaty(book->getBookId()))
+	{
+		return ID_EXIST;
+	}
+
+	const char* sql = "INSERT INTO book_info (id, book_name, author, publisher, category, publish_date, pages, total_book, remain_book, price, description, img_url, borrow_volume, del_flg) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	int rc;
 	sqlite3_stmt* stmt;
 	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
 		sqlite3_finalize(stmt);
-		return books;
+		delete book;
+		return SQLITE_DATABASE_ERROR;
 	}
 
-	std::wstring categoryName = getCategoryNameByCategory(category);
-	rc = sqlite3_bind_text16(stmt, 1, categoryName.c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_int(stmt, 1, book->getBookId());
+	rc = sqlite3_bind_text16(stmt, 2, book->getBookName().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text16(stmt, 3, book->getAuthor().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text16(stmt, 4, book->getPublisher().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text16(stmt, 5, book->getCategoryName().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text16(stmt, 6, book->getPublishDate().getWDate().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_int(stmt, 7, book->getPages());
+	rc = sqlite3_bind_int(stmt, 8, book->getTotalBook());
+	rc = sqlite3_bind_int(stmt, 9, book->getRemainBook());
+	rc = sqlite3_bind_double(stmt, 10, book->getPrice());
+	rc = sqlite3_bind_text16(stmt, 11, book->getDescription().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text(stmt, 12, book->getImgUrl().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_int(stmt, 13, book->getBorrowVolume());
+	rc = sqlite3_bind_int(stmt, 14, book->getDelFlg());
+
 	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to bind category: " << sqlite3_errmsg(mDatabase) << std::endl;
+		std::cerr << "Failed to bind: " << sqlite3_errmsg(mDatabase) << std::endl;
 		sqlite3_finalize(stmt);
-		return books;
+		delete book;
+		return SQLITE_DATABASE_ERROR;
 	}
 
-	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-		int id = sqlite3_column_int(stmt, 0);
-		books.push_back(Book(id));
+	rc = sqlite3_step(stmt);
+	if (rc == SQLITE_DONE) {
+		sqlite3_finalize(stmt);
+		delete book;
+		return SUCESSFUL;
+	}
+	else {
+		sqlite3_finalize(stmt);
+		delete book;
+		return SQLITE_DATABASE_ERROR;
+	}
+}
+
+int Book::deleteBook(Book* book)
+{
+	if (checkBookIdValidaty(book->getBookId()))
+	{
+		return INVALID_ID;
 	}
 
-	sqlite3_finalize(stmt);
-	return books;
+	const char* sql = "DELETE FROM book_info WHERE id = ?";
+	int rc;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK)
+	{
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return SQLITE_DATABASE_ERROR;
+	}
+
+	rc = sqlite3_bind_int(stmt, 1, book->getBookId());
+	if (rc != SQLITE_OK)
+	{
+		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return SQLITE_DATABASE_ERROR;
+	}
+
+	rc = sqlite3_step(stmt);
+	if (rc == SQLITE_DONE)
+	{
+		sqlite3_finalize(stmt);
+		return SUCESSFUL;
+	}
+	else
+	{
+		sqlite3_finalize(stmt);
+		return SQLITE_DATABASE_ERROR;
+	}
+}
+
+int Book::updateBook(Book* book)
+{
+	if (checkBookIdValidaty(book->getBookId()))
+	{
+		return INVALID_ID;
+	}
+
+	const char* sql = "UPDATE book_info SET book_name = ?, author = ?, publisher = ?, category = ?, publish_date = ?, pages = ?, total_book = ?, remain_book = ?, price = ?, description = ?, img_url = ?, borrow_volume = ?, del_flg = ? WHERE id = ?";
+	int rc;
+	sqlite3_stmt* stmt;
+	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
+	if (rc != SQLITE_OK)
+	{
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return SQLITE_DATABASE_ERROR;
+	}
+
+	rc = sqlite3_bind_text16(stmt, 1, book->getBookName().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text16(stmt, 2, book->getAuthor().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text16(stmt, 3, book->getPublisher().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text16(stmt, 4, book->getCategoryName().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text16(stmt, 5, book->getPublishDate().getWDate().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_int(stmt, 6, book->getPages());
+	rc = sqlite3_bind_int(stmt, 7, book->getTotalBook());
+	rc = sqlite3_bind_int(stmt, 8, book->getRemainBook());
+	rc = sqlite3_bind_double(stmt, 9, book->getPrice());
+	rc = sqlite3_bind_text16(stmt, 10, book->getDescription().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text(stmt, 11, book->getImgUrl().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_int(stmt, 12, book->getBorrowVolume());
+	rc = sqlite3_bind_int(stmt, 13, book->getDelFlg());
+	rc = sqlite3_bind_int(stmt, 14, book->getBookId());
+
+	if (rc != SQLITE_OK)
+	{
+		std::cerr << "Failed to bind id: " << sqlite3_errmsg(mDatabase) << std::endl;
+		sqlite3_finalize(stmt);
+		return SQLITE_DATABASE_ERROR;
+	}
+
+	rc = sqlite3_step(stmt);
+	if (rc == SQLITE_DONE)
+	{
+		sqlite3_finalize(stmt);
+		return SUCESSFUL;
+	}
+	else
+	{
+		sqlite3_finalize(stmt);
+		return SQLITE_DATABASE_ERROR;
+	}
 }
 
 //@return true if the id is valid(not exist), false otherwise
-bool Book::_checkBookIdValidaty(int id)
+bool Book::checkBookIdValidaty(int id)
 {
 	const char* sql = "SELECT * FROM book_info WHERE id = ?";
 	int rc;
@@ -1124,7 +1510,7 @@ void Book::_loadBookInfosFromDB()
 		_remainBook = sqlite3_column_int(stmt, 8);
 		_price = sqlite3_column_double(stmt, 9);
 		_description = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 10));
-		_imgUrl = "BookImage/" + std::string((const char*)sqlite3_column_text(stmt, 11));
+		_imgUrl = std::string((const char*)sqlite3_column_text(stmt, 11));
 		_borrowVolume = sqlite3_column_int(stmt, 12);
 		_delFlg = sqlite3_column_int(stmt, 13);
 	}

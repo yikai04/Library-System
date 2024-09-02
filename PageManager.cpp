@@ -6,6 +6,7 @@
 #include "SettingPage.hpp"
 #include "LoginPage.hpp"
 #include "SignupPage.hpp"
+#include "UserManagementPage.hpp"
 
 
 PageManager::PageManager(User& user):
@@ -20,6 +21,7 @@ PageManager::PageManager(User& user):
 	pages[Page::Setting] = std::make_unique<SettingPage>(user, *this);
 	pages[Page::Login] = std::make_unique<LoginPage>(user, *this);
 	pages[Page::Signup] = std::make_unique<SignupPage>(user, *this);
+	pages[Page::UserManagement] = std::make_unique<UserManagementPage>(user, *this);
 }
 
 PageManager::~PageManager()
@@ -45,6 +47,13 @@ void PageManager::homePageSearch(std::wstring searchText)
 {
 	if (pages[Page::Search]) {
 		pages[Page::Search]->search(searchText);
+	}
+}
+
+void PageManager::userManagementPageSearch(std::wstring searchText)
+{
+	if (pages[Page::UserManagement]) {
+		pages[Page::UserManagement]->search(searchText);
 	}
 }
 

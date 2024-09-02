@@ -14,7 +14,7 @@ HomePage::HomePage(User& user, PageManager& pageManager) :
     _textBox(720.0, sf::Vector2f(570, 512), _font, 40, L"搜索", sf::Color::Transparent, false, [&]() {_searchHandler(); }),
 	_searchButton(sf::Vector2f(60, 60), sf::Vector2f(1290, 510), "Icon/searchIcon.png", [&]() {_searchHandler(); }),
     _bookRowDisplay(720.f, _font, [&](Book* book) {_bookDetailPopUpHandler(book); }),
-    _bookDetailPopUp(_font, false, true)
+    _bookDetailPopUp(_font)
 {
     _backgroundTexture.loadFromFile("Image/HomePage.png");
     //_sprite.setTextureRect(sf::IntRect(0, 0, 800, 800));
@@ -81,6 +81,17 @@ void HomePage::onEnter()
         _topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
     }
 
+    if (_user.getSelfUserInfo().getRole() == UserType::Admin)
+    {
+        _topBarButton5.setText(L"用户管理");
+        _topBarButton5.setOnClickHandler([&]() {_pageManager.setPage(Page::UserManagement); });
+    }
+    else if (_user.getSelfUserInfo().getRole() == UserType::Student || _user.getSelfUserInfo().getRole() == UserType::Teacher)
+    {
+        _topBarButton5.setText(L"用户设置");
+        _topBarButton5.setOnClickHandler([&]() {_pageManager.setPage(Page::Setting); });
+    }
+
     _textBox.setText(L"");
     _topBarButton1.setButtonState(ButtonState::normal);
     _topBarButton2.setButtonState(ButtonState::normal);
@@ -88,6 +99,9 @@ void HomePage::onEnter()
     _topBarButton4.setButtonState(ButtonState::normal);
     _topBarButton5.setButtonState(ButtonState::normal);
     _topBarButton6.setButtonState(ButtonState::normal);
+
+    std::vector<Book> allBooks = Book::searchBooksInfo();
+    _bookRowDisplay.setBooks(std::move(allBooks));
 }
 
 void HomePage::_logoutHandler()
@@ -100,8 +114,9 @@ void HomePage::_logoutHandler()
 
 void HomePage::_bookDetailPopUpHandler(Book* book)
 {
-	_bookDetailPopUp.setBook(book);
-	_bookDetailPopUp.setPopUpVisiblity(true);
+    _bookDetailPopUp.setBook(book);
+    _bookDetailPopUp.setPopUpVisiblity(true, false);
+
 }
 
 void HomePage::_searchHandler()

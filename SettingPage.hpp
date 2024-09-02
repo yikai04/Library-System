@@ -7,6 +7,7 @@ class SettingPage : public PageBase
     public:
         SettingPage(User& user, PageManager& pageManager);
         ~SettingPage();
+        void search(std::wstring searchText);
         void handleEvent(const sf::Event& event, sf::RenderWindow& window);
         void update(sf::Time dt);
         void render(sf::RenderWindow& window);
@@ -46,4 +47,6 @@ class SettingPage : public PageBase
 		TextBox _confirmPassword;
 		IconButton _changePasswordButton;
 		TextToogleButton _deleteAccountButton;
+
+		UserInfo _adminEditingUser;
 };

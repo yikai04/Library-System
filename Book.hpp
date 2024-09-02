@@ -43,6 +43,21 @@ class Book
 		int getBorrowVolume();
 		bool getDelFlg();
 
+		bool setBookId(std::wstring);
+		bool setBookName(std::wstring bookName);
+		bool setAuthor(std::wstring author);
+		bool setPublisher(std::wstring publisher);
+		bool setCategory(std::wstring category);
+		bool setPublishDate(Date publishDate);
+		bool setPages(std::wstring pages);
+		bool setTotalBook(std::wstring totalBook);
+		bool setRemainBook(std::wstring remainBook);
+		bool setPrice(std::wstring price);
+		bool setDescription(std::wstring description);
+		bool setImgUrl(std::string imgUrl);
+		bool setBorrowVolume(std::wstring borrowVolume);
+		bool setDelFlg(std::wstring delFlg);
+
 		bool changeBookId(std::wstring id);
 		bool changeBookName(std::wstring bookName);
 		bool changeAuthor(std::wstring author);
@@ -60,13 +75,19 @@ class Book
 
 		static std::vector<Book> getBooksByCategory(BookCategory category);
 		static std::vector<Book> getAllBooks();
+		
 		static std::vector<Book> searchBooksInfo(std::wstring searchWord = L"", const std::wstring& category = L"全部");
 		static std::vector<Book> searchBooksInfoByName(std::wstring bookName = L"", const std::wstring& category = L"全部");
 		static std::vector<Book> searchBooksInfoByAuthor(std::wstring author = L"", const std::wstring& category = L"全部");
 		static std::vector<Book> searchBooksInfoByPublisher(std::wstring publisher = L"", const std::wstring& category = L"全部");
 
+		static int addBook(Book* book);
+		static int deleteBook(Book* book);
+		static int updateBook(Book* book);
+
+		static bool checkBookIdValidaty(int id);
+	
 	private:
-		bool _checkBookIdValidaty(int id);
 		void _loadBookInfosFromDB();
 		int _id;
 		std::wstring _bookName;

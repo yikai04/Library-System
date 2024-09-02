@@ -7,7 +7,7 @@
 User::User() :
 	_window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Library Management System", sf::Style::Titlebar | sf::Style::Close),
 	_pageManager(*this),
-	_userInfo(UserInfo())
+	_userSelfInfo(UserInfo())
 {
 	_window.setPosition(sf::Vector2i((sf::VideoMode::getDesktopMode().width - WINDOW_WIDTH) >> 1, (sf::VideoMode::getDesktopMode().height - WINDOW_HEIGHT) >> 1));
 }
@@ -70,7 +70,7 @@ int User::login(std::wstring username, std::wstring password)
 		if (!delFlg) {
 			std::string truthPassword = std::string((const char*)sqlite3_column_text(stmt, 3));
 			if (validatePassword(wstring_to_string(password), truthPassword)) {
-				_userInfo.setUserId(sqlite3_column_int(stmt, 0));
+				_userSelfInfo.setUserId(sqlite3_column_int(stmt, 0));
 				sqlite3_finalize(stmt);
 				return LOGIN_SUCESSFUL;
 			}
@@ -89,12 +89,12 @@ int User::login(std::wstring username, std::wstring password)
 
 void User::logout()
 {
-	_userInfo.setUserId(-1);
+	_userSelfInfo.setUserId(-1);
 }
 
 UserInfo& User::getSelfUserInfo()
 {
-	return _userInfo;
+	return _userSelfInfo;
 }
 
 void User::deleteAccount(UserInfo& user)
@@ -207,7 +207,7 @@ int User::registerAccount(std::wstring username, std::wstring password, std::wst
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_DONE) {
 		sqlite3_finalize(stmt);
-		return REGISTER_SUCESSFUL;
+		return SUCESSFUL;
 	}
 	else {
 		sqlite3_finalize(stmt);

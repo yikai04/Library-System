@@ -12,8 +12,8 @@ StatisticsPage::StatisticsPage(User& user, PageManager& pageManager) :
 	_topBarButton5(sf::Vector2f(150, 70), sf::Vector2f(1480, 80), sf::Color::Transparent, L"用户设置", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Setting); }),
 	_topBarButton6(sf::Vector2f(100, 70), sf::Vector2f(1680, 80), sf::Color::Transparent, L"登录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Login); }),
 
-	_topBorrowedBooksTable(sf::Vector2f(800, 250), sf::Vector2f(130, 200), _font, 20, { L"排名", L"书名", L"借阅量" }, { 200.f, 400.f, 200.f }, 50.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false),
-	_topBorrowedUsersTable(sf::Vector2f(800, 250), sf::Vector2f(1000, 200), _font, 20, { L"排名", L"用户名", L"借阅量" }, { 200.f, 400.f, 200.f }, 50.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false)
+	_topBorrowedBooksTable(sf::Vector2f(800, 600), sf::Vector2f(130, 200), _font, 20, { L"排名", L"书名", L"借阅量" }, { 200.f, 400.f, 200.f }, 50.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false),
+	_topBorrowedUsersTable(sf::Vector2f(800, 600), sf::Vector2f(1000, 200), _font, 20, { L"排名", L"用户名", L"借阅量" }, { 200.f, 400.f, 200.f }, 50.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false)
 {
 	_backgroundTexture.loadFromFile("Image/Background(1920x1080).png");
 
@@ -21,11 +21,11 @@ StatisticsPage::StatisticsPage(User& user, PageManager& pageManager) :
 	_sprite.setPosition(0, 0);
 	_sprite.setTexture(_backgroundTexture);
 
-	_topBorrowedBooksTable.setLeftArrowSize(sf::Vector2f(40, 40));
-	_topBorrowedBooksTable.setRightArrowSize(sf::Vector2f(40, 40));
-	_topBorrowedBooksTable.setLeftArrowPosition(sf::Vector2f(700, 520));
-	_topBorrowedBooksTable.setRightArrowPosition(sf::Vector2f(760, 520));
-	_topBorrowedBooksTable.setPageNumberPosition(sf::Vector2f(830, 520));
+	//_topBorrowedBooksTable.setLeftArrowSize(sf::Vector2f(70, 70));
+	//_topBorrowedBooksTable.setRightArrowSize(sf::Vector2f(70, 70));
+	_topBorrowedBooksTable.setLeftArrowPosition(sf::Vector2f(660, 950));
+	_topBorrowedBooksTable.setRightArrowPosition(sf::Vector2f(750, 950));
+	_topBorrowedBooksTable.setPageNumberPosition(sf::Vector2f(830, 960));
 }
 
 StatisticsPage::~StatisticsPage()
@@ -74,6 +74,17 @@ void StatisticsPage::onEnter()
 	if (_user.getSelfUserInfo().getRole() != UserType::Guest) {
 		_topBarButton6.setText(L"登出");
 		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
+	}
+
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin)
+	{
+		_topBarButton5.setText(L"用户管理");
+		_topBarButton5.setOnClickHandler([&]() {_pageManager.setPage(Page::UserManagement); });
+	}
+	else if (_user.getSelfUserInfo().getRole() == UserType::Student || _user.getSelfUserInfo().getRole() == UserType::Teacher)
+	{
+		_topBarButton5.setText(L"用户设置");
+		_topBarButton5.setOnClickHandler([&]() {_pageManager.setPage(Page::Setting); });
 	}
 
 	_topBarButton1.setButtonState(ButtonState::normal);
