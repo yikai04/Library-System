@@ -16,7 +16,9 @@ SearchPage::SearchPage(User& user, PageManager& pageManager) :
 	_searchBar(700.0, sf::Vector2f(650, 220), L"搜索", _font, 42, [&]() {_searchBarHandler(); }),
 	_bookDetailPopUp(_font, false, false, false, [&](Book* book) {return _editBookHandler(book); }, [&](Book* book) {_deleteBookHandler(book); }),
 	_newBookButton(sf::Vector2f(150, 70), sf::Vector2f(1680, 250), sf::Color::Transparent, L"增加书籍", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_newBookHandler(); }),
-	_isNewBookButtonClicked(false)
+	_isNewBookButtonClicked(false),
+	_isCalledSearch(false),
+	_popUpMsg(_font)
 {
 	_backgroundTexture.loadFromFile("Image/Background(1920x1080).png");
 
@@ -33,11 +35,17 @@ SearchPage::~SearchPage()
 void SearchPage::search(std::wstring searchText)
 {
 	_searchBar.setText(searchText);
-	_searchBarHandler();
+	_isCalledSearch = true;
 }
 
 void SearchPage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 {
+	if (_popUpMsg.getPopUpVisiblity())
+	{
+		_popUpMsg.handleEvent(event, window);
+		return;
+	}
+
 	if (_bookDetailPopUp.getPopUpVisiblity())
 	{
 		_bookDetailPopUp.handleEvent(event, window);
@@ -62,8 +70,17 @@ void SearchPage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 
 void SearchPage::update(sf::Time dt)
 {
+	if (_popUpMsg.getPopUpVisiblity()) {
+		_popUpMsg.update(dt);
+		return;
+	}
+
+	if (_bookDetailPopUp.getPopUpVisiblity()) {
+		_bookDetailPopUp.update(dt);
+		return;
+	}
+
 	_searchBar.update(dt);
-	_bookDetailPopUp.update(dt);
 }
 
 void SearchPage::render(sf::RenderWindow& window)
@@ -86,6 +103,7 @@ void SearchPage::render(sf::RenderWindow& window)
 	}
 
 	_bookDetailPopUp.render(window);
+	_popUpMsg.render(window);
 	//window.display() called in main.cpp
 }
 
@@ -123,6 +141,14 @@ void SearchPage::onEnter()
 
 	std::vector<Book> allBooks = Book::searchBooksInfo();
 	_booksDisplay.setBooks(std::move(allBooks));
+
+	if (!_isCalledSearch) {
+		_searchBar.setText(L"");
+	}
+	else {
+		_searchBarHandler();
+		_isCalledSearch = false;
+	}
 }
 
 void SearchPage::_searchBarHandler()
@@ -143,6 +169,10 @@ void SearchPage::_searchBarHandler()
 	}
 	else {
 		return;
+	}
+
+	if (searchedBooks.empty()) {
+		_popUpMsg.OpenPopUp(L"提示", L"未找到相关书籍", L"", false);
 	}
 
 	_booksDisplay.setBooks(std::move(searchedBooks));
@@ -172,7 +202,12 @@ bool SearchPage::_editBookHandler(Book* book)
 			if (status == SUCESSFUL) {
 				return true;
 			}
+			else if (status == ID_EXIST) {
+				_popUpMsg.OpenPopUp(L"提示", L"书籍ID已存在", L"", false);
+				return false;
+			}
 			else {
+				_popUpMsg.OpenPopUp(L"提示", L"添加书籍失败", L"", false);
 				return false;
 			}
 		}
@@ -181,7 +216,12 @@ bool SearchPage::_editBookHandler(Book* book)
 			if (status == SUCESSFUL) {
 				return true;
 			}
+			else if (status == ID_EXIST) {
+				_popUpMsg.OpenPopUp(L"提示", L"书籍ID不存在", L"", false);
+				return false;
+			}
 			else {
+				_popUpMsg.OpenPopUp(L"提示", L"更新书籍失败", L"", false);
 				return false;
 			}
 		}

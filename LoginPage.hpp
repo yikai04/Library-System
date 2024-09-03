@@ -31,4 +31,5 @@ class LoginPage : public PageBase
 		TextBox _password;
 		Button _loginButton;
 		TextToogleButton _signupButton;
+		PopUpMsg _popUpMsg;
 };

@@ -52,8 +52,8 @@ void PageManager::homePageSearch(std::wstring searchText)
 
 void PageManager::userManagementPageSearch(std::wstring searchText)
 {
-	if (pages[Page::UserManagement]) {
-		pages[Page::UserManagement]->search(searchText);
+	if (pages[Page::Setting]) {
+		pages[Page::Setting]->search(searchText);
 	}
 }
 

@@ -133,10 +133,10 @@ int User::registerAccount(std::wstring username, std::wstring password, std::wst
 	}
 	std::string usernameStr = wstring_to_string(username);
 
-	int idInt = std::stoi(wstring_to_string(id));
-	if (!UserInfo::checkIdValidaty(idInt)) {
-		return INVALID_ID;
+	if (!UserInfo::checkIdValidaty(id)) {
+		return INVALID_USER_ID;
 	}
+	int idInt = std::stoi(wstring_to_string(id));
 
 	std::regex emailPattern("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$");
 	std::string emailStr = wstring_to_string(email);
@@ -215,8 +215,25 @@ int User::registerAccount(std::wstring username, std::wstring password, std::wst
 	}
 }
 
-bool User::borrowBook(int userId, int bookId)
+int User::borrowBook(std::wstring userId, std::wstring bookId)
 {
+	if (!UserInfo::checkUsernameValidaty(userId)) {
+		return INVALID_USER_ID;
+	}
+
+	int bookIdInt = std::stoi(bookId);
+	if (!Book::checkBookIdValidaty(bookIdInt)) {
+		return INVALID_BOOK_ID;
+	}
+
+	int userIdInt = std::stoi(userId);
+	UserInfo user(userIdInt);
+	Book book(bookIdInt);
+
+	if (book.getRemainBook() < 1) {
+		return NO_BOOK;
+	}
+
 	const char* sql = "INSERT INTO borrow_info (book_id, user_id, borrow_date, due_date) VALUES (?, ?, ?, ?)";
 	int rc;
 	sqlite3_stmt* stmt;
@@ -224,14 +241,13 @@ bool User::borrowBook(int userId, int bookId)
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
 		sqlite3_finalize(stmt);
-		return false;
+		return SQLITE_DATABASE_ERROR;
 	}
 
 	Date todayDate;
 	todayDate.setTodayDate();
 	Date dueDate;
 	dueDate.setTodayDate();
-	UserInfo user(userId);
 	if (user.getRole() == UserType::Student) {
 		dueDate.addMonths(1);
 	}
@@ -242,35 +258,41 @@ bool User::borrowBook(int userId, int bookId)
 		dueDate.addMonths(6);
 	}
 	else {
-		return false;
+		return OVER_LIMIT;
 	}
 
-	rc = sqlite3_bind_int(stmt, 1, bookId);
-	rc = sqlite3_bind_int(stmt, 2, userId);
+	rc = sqlite3_bind_int(stmt, 1, bookIdInt);
+	rc = sqlite3_bind_int(stmt, 2, userIdInt);
 	rc = sqlite3_bind_text(stmt, 3, todayDate.getDate().c_str(), -1, SQLITE_STATIC);
 	rc = sqlite3_bind_text(stmt, 4, dueDate.getDate().c_str(), -1, SQLITE_STATIC);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to bind: " << sqlite3_errmsg(mDatabase) << std::endl;
 		sqlite3_finalize(stmt);
-		return false;
+		return SQLITE_DATABASE_ERROR;
 	}
 
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_DONE) {
 		user.addBorrowVolume();
-		Book book(bookId);
 		book.addBorrowVolume();
+		book.changeRemainBook(std::to_wstring(book.getRemainBook() - 1));
 		sqlite3_finalize(stmt);
-		return true;
+		return SUCESSFUL;
 	}
 	else {
 		sqlite3_finalize(stmt);
-		return false;
+		return SQLITE_DATABASE_ERROR;
 	}
 }
 
-bool User::returnBook(int bookId)
+int User::returnBook(std::wstring bookId)
 {
+	int bookIdInt = std::stoi(bookId);
+	
+	if (!Book::checkBookIdValidaty(bookIdInt)) {
+		return INVALID_BOOK_ID;
+	}
+
 	const char* sql = "UPDATE borrow_info SET return_date = ? WHERE book_id = ?";
 	int rc;
 	sqlite3_stmt* stmt;
@@ -278,27 +300,29 @@ bool User::returnBook(int bookId)
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(mDatabase) << std::endl;
 		sqlite3_finalize(stmt);
-		return false;
+		return SQLITE_DATABASE_ERROR;
 	}
 
 	Date todayDate;
 	todayDate.setTodayDate();
 
 	rc = sqlite3_bind_text(stmt, 1, todayDate.getDate().c_str(), -1, SQLITE_STATIC);
-	rc = sqlite3_bind_int(stmt, 2, bookId);
+	rc = sqlite3_bind_int(stmt, 2, bookIdInt);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to bind: " << sqlite3_errmsg(mDatabase) << std::endl;
 		sqlite3_finalize(stmt);
-		return false;
+		return SQLITE_DATABASE_ERROR;
 	}
 
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_DONE) {
+		Book book(bookIdInt);
+		book.changeRemainBook(std::to_wstring(book.getRemainBook() + 1));
 		sqlite3_finalize(stmt);
-		return true;
+		return SUCESSFUL;
 	}
 	else {
 		sqlite3_finalize(stmt);
-		return false;
+		return SQLITE_DATABASE_ERROR;
 	}
 }

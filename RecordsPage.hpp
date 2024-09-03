@@ -15,6 +15,11 @@ class RecordsPage : public PageBase
     protected:
 		void _showBorrowRecords();
         void _logoutHandler();
+		void _openBorrowBookPopUp();
+		void _openReturnBookPopUp();
+		bool _borrowBookHandler();
+		bool _returnBookHandler();
+        void _bookDetailPopUpHandler(Book* book);
     
     private:
         sf::Texture _backgroundTexture;
@@ -28,4 +33,8 @@ class RecordsPage : public PageBase
         TextToogleButton _topBarButton6;
 
         Table _table;
+		ToogleButton _borrowBookButton;
+		ToogleButton _returnBookButton;
+        BookDetailPopUp _bookDetailPopUp;
+		PopUpMsg _popUpMsg;
 };

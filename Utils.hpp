@@ -1,24 +1,28 @@
 ﻿#pragma once	
 
+#define ALL_COLUMNS -2
 #define LOGIN_SUCESSFUL 0
 #define INVALID_USERNAME 1
-#define INVALID_ID 2
-#define INVALID_EMAIL 3
-#define INVALID_NAME 4
-#define INVALID_AUTHOR 5
-#define INVALID_PUBLISHER 6
-#define INVALID_CATEGORY 7
-#define INVALID_DATE 8
-#define INVALID_PAGES 9
-#define INVALID_PRICE 10
-#define INVALID_REMAIN_BOOK 11
-#define INVALID_TOTAL_BOOK 12
-#define INVALID_DESCRIPTION 13
-#define INVALID_IMG_URL 14
-#define WRONG_PASSWORD 15
-#define SQLITE_DATABASE_ERROR 16
-#define SUCESSFUL 17
-#define ID_EXIST 18
+#define INVALID_USER_ID 2
+#define INVALID_BOOK_ID 3
+#define INVALID_EMAIL 4
+#define INVALID_NAME 5
+#define INVALID_AUTHOR 6
+#define INVALID_PUBLISHER 7
+#define INVALID_CATEGORY 8
+#define INVALID_DATE 9
+#define INVALID_PAGES 10
+#define INVALID_PRICE 11
+#define INVALID_REMAIN_BOOK 12
+#define INVALID_TOTAL_BOOK 13
+#define INVALID_DESCRIPTION 14
+#define INVALID_IMG_URL 15
+#define WRONG_PASSWORD 16
+#define SQLITE_DATABASE_ERROR 17
+#define SUCESSFUL 18
+#define ID_EXIST 19
+#define NO_BOOK 20
+#define OVER_LIMIT 21
 
 #include "Dependencies/sqlite3/sqlite3.h"
 #include "Dependencies/Bcrypt/BCrypt.hpp"

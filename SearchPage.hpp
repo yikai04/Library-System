@@ -36,7 +36,9 @@ class SearchPage : public PageBase
         SearchBar _searchBar;
         BookDetailPopUp _bookDetailPopUp;
 		TextToogleButton _newBookButton;
+        PopUpMsg _popUpMsg;
 
         bool _isNewBookButtonClicked;
+        bool _isCalledSearch;
 		//IconButton _newBookButton2;
 };

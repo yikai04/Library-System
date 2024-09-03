@@ -106,12 +106,17 @@ void SettingPage::render(sf::RenderWindow& window)
 void SettingPage::onEnter()
 {
 	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
-		_pageManager.setPage(Page::UserManagement);
+		_topBarButton5.setText(L"用户管理");
+		_topBarButton5.setOnClickHandler([&]() {_pageManager.setPage(Page::UserManagement); });
+
+		_role.setOptions({ L"学生", L"教师", L"管理员" });
 	}
 
 	if (_user.getSelfUserInfo().getRole() != UserType::Guest) {
 		_topBarButton6.setText(L"登出");
 		_topBarButton6.setOnClickHandler([&]() {_logoutHandler(); });
+
+		_role.setOptions({ L"学生", L"教师" });
 	}
 
 	_topBarButton1.setButtonState(ButtonState::normal);
@@ -136,7 +141,25 @@ void SettingPage::_showUserInfo()
 {
 	UserInfo userInfo = _user.getSelfUserInfo();
 	if (userInfo.getRole() == UserType::Admin) {
-		
+		_username.setText(_adminEditingUser.getUsername());
+		_email.setText(_adminEditingUser.getEmail());
+		_name.setText(_adminEditingUser.getName());
+		_id.setText(std::to_wstring(_adminEditingUser.getUserId()));
+		_registerDate.setText(_adminEditingUser.getRegisterDate().getWDate());
+
+		if (_adminEditingUser.getGender() == L"M") {
+			_gender.setText(L"男");
+		}
+		else if (_adminEditingUser.getGender() == L"F") {
+			_gender.setText(L"女");
+		}
+
+		if (_adminEditingUser.getRole() == UserType::Student) {
+			_role.setText(L"学生");
+		}
+		else if (_adminEditingUser.getRole() == UserType::Teacher) {
+			_role.setText(L"教师");
+		}
 	}
 	else if (userInfo.getRole() == UserType::Student || userInfo.getRole() == UserType::Teacher) {
 		_username.setText(userInfo.getUsername());
@@ -166,8 +189,14 @@ void SettingPage::_showUserInfo()
 
 void SettingPage::_deleteAccountHandler()
 {
-	_user.deleteAccount(_user.getSelfUserInfo());
-	_pageManager.setPage(Page::Login);
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		_user.deleteAccount(_adminEditingUser);
+		_pageManager.setPage(Page::UserManagement);
+	}
+	else {
+		_user.deleteAccount(_user.getSelfUserInfo());
+		_pageManager.setPage(Page::Login);
+	}
 }
 
 bool SettingPage::_updateUsername()

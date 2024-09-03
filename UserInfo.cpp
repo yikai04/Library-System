@@ -566,13 +566,19 @@ bool UserInfo::checkUsernameValidaty(std::wstring username)
 }
 
 //@return true if the id is valid(not exist), false otherwise
-bool UserInfo::checkIdValidaty(int id)
+bool UserInfo::checkIdValidaty(std::wstring id)
 {
 	std::regex digitRegex("^\\d+$");
-	if (!std::regex_match(std::to_string(id), digitRegex)) {
+	if (!std::regex_match(wstring_to_string(id), digitRegex)) {
 		return false;
 	}
 
+	return checkIdValidaty(std::stoi(id));
+}
+
+//@return true if the id is valid(not exist), false otherwise
+bool UserInfo::checkIdValidaty(int id)
+{
 	const char* sql = "SELECT * FROM user_info WHERE id = ?";
 	int rc;
 	sqlite3_stmt* stmt;

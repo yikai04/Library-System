@@ -37,4 +37,5 @@ class SignupPage : public PageBase
 		DropDown _gender;
 		Button _signupButton;
 		TextToogleButton _loginButton;
+		PopUpMsg _popUpMsg;
 };

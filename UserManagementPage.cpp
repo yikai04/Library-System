@@ -11,7 +11,7 @@ UserManagementPage::UserManagementPage(User& user, PageManager& pageManager) :
 	_topBarButton5(sf::Vector2f(150, 70), sf::Vector2f(1480, 80), sf::Color::Transparent, L"用户管理", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::UserManagement); }),
 	_topBarButton6(sf::Vector2f(100, 70), sf::Vector2f(1680, 80), sf::Color::Transparent, L"登录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Login); }),
 
-	_table(sf::Vector2f(1650, 600), sf::Vector2f(130, 200), _font, 30, { L"序号", L"编号", L"姓名", L"性别", L"身份", L"电子邮箱", L"借阅量" }, { 150.f, 200.f, 350.f, 100.f, 200.f, 450.f, 200.f }, 100.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false, [](Book book) {}, [&](UserInfo user) { _editUserHandler(user); }, -1, 0)
+	_table(sf::Vector2f(1650, 700), sf::Vector2f(130, 200), _font, 30, { L"序号", L"编号", L"姓名", L"性别", L"身份", L"电子邮箱", L"借阅量" }, { 150.f, 200.f, 350.f, 100.f, 200.f, 450.f, 200.f }, 100.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false, [](Book* book) {}, [=](UserInfo* user) { _editUserHandler(user); }, -1, ALL_COLUMNS)
 {
 	_backgroundTexture.loadFromFile("Image/Background(1920x1080).png");
 
@@ -95,8 +95,8 @@ void UserManagementPage::_logoutHandler()
 	_pageManager.setPage(Page::Login);
 }
 
-void UserManagementPage::_editUserHandler(UserInfo user)
+void UserManagementPage::_editUserHandler(UserInfo* user)
 {
-	_pageManager.userManagementPageSearch(std::to_wstring(user.getUserId()));
+	_pageManager.userManagementPageSearch(std::to_wstring(user->getUserId()));
 	_pageManager.setPage(Page::Setting);
 }

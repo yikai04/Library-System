@@ -18,8 +18,8 @@ class User
 		void deleteAccount(UserInfo& user);
 		int registerAccount(std::wstring username, std::wstring password, std::wstring email, std::wstring name, std::wstring id, std::wstring role, std::wstring gender);
 
-		bool borrowBook(int userId, int bookId);
-		bool returnBook(int bookId);
+		int borrowBook(std::wstring userId, std::wstring bookId);
+		int returnBook(std::wstring bookId);
 
 	private:
 		sf::RenderWindow _window;

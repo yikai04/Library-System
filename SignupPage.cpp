@@ -21,7 +21,8 @@ SignupPage::SignupPage(User& user, PageManager& pageManager) :
 	_gender(sf::Vector2f(480, 50), sf::Vector2f(1020, 630), sf::Color(240, 240, 240, 255), _font, 35, L"男"),
 	_role(sf::Vector2f(480, 50), sf::Vector2f(1020, 740), sf::Color(240, 240, 240, 255), _font, 35, L"学生"),
 	_signupButton(sf::Vector2f(600, 70), sf::Vector2f(660, 845), [&]() {_signupHandler(); }, sf::Color::Transparent),
-	_loginButton(sf::Vector2f(600, 50), sf::Vector2f(880, 940), sf::Color::Transparent, L"已注册？ 登录", _font, 22, 20, sf::Color(203, 140, 63, 255), sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Login); }, true)
+	_loginButton(sf::Vector2f(600, 50), sf::Vector2f(880, 940), sf::Color::Transparent, L"已注册？ 登录", _font, 22, 20, sf::Color(203, 140, 63, 255), sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Login); }, true),
+	_popUpMsg(_font)
 {
 	_backgroundTexture.loadFromFile("Image/SignupPage.png");
 
@@ -40,6 +41,12 @@ SignupPage::~SignupPage()
 
 void SignupPage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 {
+	if (_popUpMsg.getPopUpVisiblity())
+	{
+		_popUpMsg.handleEvent(event, window);
+		return;
+	}
+
 	_topBarButton1.handleEvent(event, window);
 	_topBarButton2.handleEvent(event, window);
 	_topBarButton3.handleEvent(event, window);
@@ -61,6 +68,11 @@ void SignupPage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 
 void SignupPage::update(sf::Time dt)
 {
+	if (_popUpMsg.getPopUpVisiblity()) {
+		_popUpMsg.update(dt);
+		return;
+	}
+
 	_username.update(dt);
 	_email.update(dt);
 	_password.update(dt);
@@ -91,6 +103,7 @@ void SignupPage::render(sf::RenderWindow& window)
 	_gender.render(window);
 	_signupButton.render(window);
 	_loginButton.render(window);
+	_popUpMsg.render(window);
 	//window.display() called in main.cpp
 }
 
@@ -131,7 +144,7 @@ void SignupPage::_logoutHandler()
 void SignupPage::_signupHandler()
 {
 	if (_password.getText() != _confirmPassword.getText()) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"两次密码不一致", L"", false);
 	}
 	int status = _user.registerAccount(
 		_username.getText(),
@@ -151,15 +164,18 @@ void SignupPage::_signupHandler()
 		_pageManager.setPage(Page::Login);
 	}
 	else if (status == INVALID_USERNAME) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"用户名不合法或已存在", L"", false);
 	}
 	else if (status == INVALID_EMAIL) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"邮箱不合法", L"", false);
 	}
 	else if (status == INVALID_NAME) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"姓名不合法", L"", false);
 	}
-	else if (status == INVALID_ID) {
-
+	else if (status == INVALID_USER_ID) {
+		_popUpMsg.OpenPopUp(L"提示", L"编号不合法", L"", false);
+	}
+	else {
+		_popUpMsg.OpenPopUp(L"提示", L"注册失败", L"", false);
 	}
 }

@@ -376,15 +376,9 @@ IconButton::~IconButton()
 
 }
 
-void IconButton::setIcon(const std::string iconPath)
+void IconButton::setIcon(const std::string& iconPath)
 {
-	sf::Image image;
-	if (!image.loadFromFile(_iconPath)) {
-		std::cerr << "Failed to load icon texture" << std::endl;
-		return;
-	}
 	_iconPath = iconPath;
-
 	_resizeIcon();
 }
 
@@ -537,6 +531,11 @@ void TextBox::setText(std::wstring text)
 	_displayString();
 }
 
+void TextBox::setPlaceHolderText(std::wstring text)
+{
+	_placeHolderText.setString(text);
+}
+
 void TextBox::setPosition(const sf::Vector2f position)
 {
 	_textBox.setPosition(position);
@@ -550,9 +549,22 @@ void TextBox::setFontSize(const int fontSize)
 	_inputText.setCharacterSize(fontSize);
 	_placeHolderText.setCharacterSize(fontSize);
 	_inputTextLenCounter.setCharacterSize(fontSize);
-	_singleWordHeight = _inputTextLenCounter.getGlobalBounds().height;
+	if (_inputTextLenCounter.getString() != L"") {
+		_singleWordHeight = _inputTextLenCounter.getGlobalBounds().height;
+	}
+	else {
+		_inputTextLenCounter.setString(L"我");
+		_singleWordHeight = _inputTextLenCounter.getGlobalBounds().height;
+		_inputTextLenCounter.setString(L"");
+	}
 	_caret.setSize(sf::Vector2f(2.f, _singleWordHeight));
+	_textBox.setSize(sf::Vector2f(_textBox.getSize().x, _singleWordHeight + 20.f));
 	_updateCaretPosition();
+}
+
+void TextBox::setBackgroundColor(const sf::Color backgroundColor)
+{
+	_textBox.setFillColor(backgroundColor);
 }
 
 std::wstring TextBox::getText()
@@ -1064,6 +1076,11 @@ void TextDisplayDropDown::setText(std::wstring text)
 void TextDisplayDropDown::setEditable(bool isEditable)
 {
 	_isEditable = isEditable;
+}
+
+void TextDisplayDropDown::setOptions(std::vector<std::wstring> options)
+{
+	_dropDown.setOptions(options);
 }
 
 std::wstring TextDisplayDropDown::getText()
@@ -1672,7 +1689,7 @@ void BooksDisplayInPage::_updateDisplay()
 
 
 
-Table::Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, const float& rowHeight, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2, bool isScrollable, std::function<void(Book)> bookOnClickHandler, std::function<void(UserInfo)> userOnClickHandler, int bookButtonIndex, int userButtonIndex) :
+Table::Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring>&& headers, std::vector<float>&& rowWidth, const float& rowHeight, sf::Color headerColor, sf::Color rowColor1, sf::Color rowColor2, bool isScrollable, std::function<void(Book*)> bookOnClickHandler, std::function<void(UserInfo*)> userOnClickHandler, int bookButtonIndex, int userButtonIndex) :
 	_view(sf::FloatRect(position, size)),
 	_font(font),
 	_fontSize(fontSize),
@@ -1693,7 +1710,7 @@ Table::Table(sf::Vector2f size, sf::Vector2f position, const sf::Font& font, con
 	_bookButtonIndex(bookButtonIndex),
 	_userButtonIndex(userButtonIndex)
 {
-	_totalRows = size.y / rowHeight;
+	_totalRows = size.y / rowHeight - 1;
 	_updateHeaders();
 	_pageNumber.setCurrentPage(_currentDisplayPage + 1);
 }
@@ -1840,24 +1857,49 @@ Table::_row::~_row()
 	}
 }
 
-void Table::_row::setBookOnClickHandler(int bookButtonIndex, Book book, std::function<void(Book)> bookOnClickHandler)
+void Table::_row::setBookOnClickHandler(int bookButtonIndex, Book* book, std::function<void(Book*)> bookOnClickHandler)
 {
-	if (bookButtonIndex != -1) {
-		_rowButtons[bookButtonIndex]->setOnClickHandler([&]() {bookOnClickHandler(book); });
+	_bookButtonIndex = bookButtonIndex;
+	if (_bookButtonIndex == ALL_COLUMNS) {
+		for (TextToogleButton* rowButton : _rowButtons) {
+			rowButton->setOnClickHandler([=]() {bookOnClickHandler(book); });
+		}
+	}
+	else {
+		if (bookButtonIndex > -1) {
+			_rowButtons[bookButtonIndex]->setOnClickHandler([=]() {bookOnClickHandler(book); });
+		}
 	}
 }
 
-void Table::_row::setUserOnClickHandler(int userButtonIndex, UserInfo user, std::function<void(UserInfo)> userOnClickHandler)
+void Table::_row::setUserOnClickHandler(int userButtonIndex, UserInfo* user, std::function<void(UserInfo*)> userOnClickHandler)
 {
-	if (userButtonIndex != -1) {
-		_rowButtons[userButtonIndex]->setOnClickHandler([&]() {userOnClickHandler(user); });
+	_userButtonIndex = userButtonIndex;
+	if (_userButtonIndex == ALL_COLUMNS) {
+		for (TextToogleButton* rowButton : _rowButtons) {
+			rowButton->setOnClickHandler([=]() {userOnClickHandler(user); });
+		}
+	}
+	else {
+		if (userButtonIndex > -1) {
+			_rowButtons[userButtonIndex]->setOnClickHandler([=]() {userOnClickHandler(user); });
+		}
 	}
 }
 
 void Table::_row::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 {
-	for (TextToogleButton* rowButton : _rowButtons) {
-		rowButton->handleEvent(event, window);
+	if (_bookButtonIndex == ALL_COLUMNS || _userButtonIndex == ALL_COLUMNS) {
+		for (TextToogleButton* rowButton : _rowButtons) {
+			rowButton->handleEvent(event, window);
+		}
+	}
+	else {
+		for (size_t i = 0; i < _rowButtons.size(); i++) {
+			if (i == _bookButtonIndex || i == _userButtonIndex) {
+				_rowButtons[i]->handleEvent(event, window);
+			}
+		}
 	}
 }
 
@@ -1881,11 +1923,11 @@ void Table::_updateRows()
 	for (size_t i = 0; i < _rowsData.size(); i++) {
 		_row* row = new _row(sf::Vector2f(_position.x, positionY), _font, _fontSize, _rowsData[i], _rowWidth, _rowHeight, i % 2 == 0 ? _rowColor1 : _rowColor2);
 		if (_bookButtonIndex != -1) {
-			row->setBookOnClickHandler(_bookButtonIndex, _books[i], _bookOnClickHandler);
+			row->setBookOnClickHandler(_bookButtonIndex, &_books[i], _bookOnClickHandler);
 		}
 		
 		if (_userButtonIndex != -1) {
-			row->setUserOnClickHandler(_userButtonIndex, _users[i], _userOnClickHandler);
+			row->setUserOnClickHandler(_userButtonIndex, &_users[i], _userOnClickHandler);
 		}
 
 		_rowDisplay.push_back(row);
@@ -1941,6 +1983,137 @@ void Table::_setPageNumber(int pageNumber)
 
 
 
+PopUpMsg::PopUpMsg(const sf::Font& font) :
+	_msg1TextBox(500.f, sf::Vector2f(710, 500), font, 30, L"", sf::Color(240, 240, 240, 255), false),
+	_msg2TextBox(500.f, sf::Vector2f(710, 570), font, 30, L"", sf::Color(240, 240, 240, 255), false),
+	_confirmButton(sf::Vector2f(50, 70), sf::Vector2f(1130, 640), sf::Color::Transparent, L"OK", font, 35, 38, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_confirmButtonOnClickHandler(); }),
+	_closeButton(sf::Vector2f(60, 60), sf::Vector2f(1200, 390), "Icon/closeButton.png", [&]() {_closePopUp(); }),
+	_isEditable(false),
+	_isEditing(false),
+	_isPopUp(false),
+	_confirmButtonHandler([]() {return true; })
+{
+	_mask.setSize(sf::Vector2f(1920, 1080));
+	_mask.setPosition(sf::Vector2f(0, 0));
+	_mask.setFillColor(sf::Color(200, 200, 200, 200));
+
+	_popup.setSize(sf::Vector2f(600, 300));
+	_popup.setPosition(sf::Vector2f(660, 390));
+	_popup.setFillColor(sf::Color(255, 255, 255, 255));
+
+	_title.setFont(font);
+	_title.setString(L"");
+	_title.setCharacterSize(45);
+	_title.setFillColor(sf::Color::Black);
+	_title.setPosition(sf::Vector2f(710, 420));
+}
+
+PopUpMsg::~PopUpMsg()
+{
+
+}
+
+void PopUpMsg::OpenPopUp(std::wstring title, std::wstring msg1, std::wstring msg2, bool isEditable, std::function<bool()> confirmButtonHandler)
+{
+	_msg1TextBox.setText(L"");
+	_msg2TextBox.setText(L"");
+
+	if (isEditable) {
+		_msg1TextBox.setPlaceHolderText(msg1);
+		_msg2TextBox.setPlaceHolderText(msg2);
+	}
+	else {
+		_msg1TextBox.setText(msg1);
+		_msg2TextBox.setText(msg2);
+	}
+
+	if (isEditable) {
+		_msg1TextBox.setBackgroundColor(sf::Color(240, 240, 240, 255));
+		_msg2TextBox.setBackgroundColor(sf::Color(240, 240, 240, 255));
+	}
+	else {
+		_msg1TextBox.setBackgroundColor(sf::Color::Transparent);
+		_msg2TextBox.setBackgroundColor(sf::Color::Transparent);
+	}
+
+	if (msg2 == L"")
+	{
+		_msg1TextBox.setFontSize(36);
+		_msg2TextBox.setBackgroundColor(sf::Color::Transparent);
+	}
+	else {
+		_msg1TextBox.setFontSize(30);
+		_msg2TextBox.setBackgroundColor(sf::Color(240, 240, 240, 255));
+	}
+
+	_isEditable = isEditable;
+	_confirmButtonHandler = confirmButtonHandler;
+	_title.setString(title);
+	_isPopUp = true;
+}
+
+bool PopUpMsg::getPopUpVisiblity()
+{
+	return _isPopUp;
+}
+
+std::wstring PopUpMsg::getMsg1()
+{
+	return _msg1TextBox.getText();
+}
+
+std::wstring PopUpMsg::getMsg2()
+{
+	return _msg2TextBox.getText();
+}
+
+void PopUpMsg::handleEvent(const sf::Event& event, sf::RenderWindow& window)
+{
+	if (_isPopUp) {
+		_closeButton.handleEvent(event, window);
+		_confirmButton.handleEvent(event, window);
+		if (_isEditable) {
+			_msg1TextBox.handleEvent(event, window);
+			_msg2TextBox.handleEvent(event, window);
+		}
+	}
+}
+
+void PopUpMsg::update(sf::Time dt)
+{
+	if (_isPopUp && _isEditable) {
+		_msg1TextBox.update(dt);
+		_msg2TextBox.update(dt);
+	}
+}
+
+void PopUpMsg::render(sf::RenderWindow& window)
+{
+	if (_isPopUp) {
+		window.draw(_mask);
+		window.draw(_popup);
+		window.draw(_title);
+
+		_msg1TextBox.render(window);
+		_msg2TextBox.render(window);
+		_confirmButton.render(window);
+		_closeButton.render(window);
+	}
+}
+
+void PopUpMsg::_closePopUp()
+{
+	_isPopUp = false;
+}
+
+void PopUpMsg::_confirmButtonOnClickHandler()
+{
+	if (_confirmButtonHandler()) {
+		_isPopUp = false;
+	}
+}
+
+
 
 BookDetailPopUp::BookDetailPopUp(const sf::Font& font, bool isPopUp, bool isEditable, bool isNewMode, std::function<bool(Book*)> editFunction, std::function<void(Book*)> deleteFunction) :
 	_bookName(sf::Vector2f(600, 50), sf::Vector2f(600, 200), font, 40, L"书名", sf::Color::Transparent),
@@ -1964,16 +2137,18 @@ BookDetailPopUp::BookDetailPopUp(const sf::Font& font, bool isPopUp, bool isEdit
 	_bookTotalStock(sf::Vector2f(300, 50), sf::Vector2f(1200, 430), font, 20, L"总量", sf::Color::Transparent),
 	_bookDescriptionTitle(sf::Vector2f(100, 50), sf::Vector2f(300, 570), font, 20, sf::Color::Transparent, L"简述", L"", false),
 	_bookDescription(sf::Vector2f(1300, 270), sf::Vector2f(300, 620), font, 20, L"简述", sf::Color::Transparent),
-	_bookImage(sf::Vector2f(270, 350), sf::Vector2f(300, 200), "Icon/blankBook.jpg"),
+	_bookImage(sf::Vector2f(270, 350), sf::Vector2f(300, 200), "Icon/blankBook.jpg", [&]() {_imageButtonOnClickHandler(); }),
 	_closeButton(sf::Vector2f(100, 100), sf::Vector2f(1600, 120), "Icon/closeButton.png", [&]() {_closePopUp(); }),
 	_editButton(sf::Vector2f(50, 50), sf::Vector2f(1440, 150), "Icon/editIcon(White).png", [&]() {_editButtonOnClickHandler(); }),
 	_deleteButton(sf::Vector2f(50, 50), sf::Vector2f(1520, 150), "Icon/deleteIcon.png", [&]() {_deleteButtonOnClickHandler(); }),
+	_popUpMsg(font),
 	_editFunction(editFunction),
 	_deleteFunction(deleteFunction),
 	_isPopUp(isPopUp),
 	_isEditable(isEditable),
 	_isNewMode(isNewMode),
-	_isEditing(false)
+	_isEditing(false),
+	_book(nullptr)
 {
 	_mask.setSize(sf::Vector2f(1920, 1080));
 	_mask.setPosition(sf::Vector2f(0, 0));
@@ -2030,6 +2205,12 @@ bool BookDetailPopUp::getPopUpVisiblity()
 
 void BookDetailPopUp::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 {
+	if (_popUpMsg.getPopUpVisiblity())
+	{
+		_popUpMsg.handleEvent(event, window);
+		return;
+	}
+
 	if (_isPopUp) {
 		_closeButton.handleEvent(event, window);
 
@@ -2061,6 +2242,11 @@ void BookDetailPopUp::handleEvent(const sf::Event& event, sf::RenderWindow& wind
 
 void BookDetailPopUp::update(sf::Time dt)
 {
+	if (_popUpMsg.getPopUpVisiblity()) {
+		_popUpMsg.update(dt);
+		return;
+	}
+
 	if (_isPopUp && _isEditable && _isEditing) {
 		_bookId.update(dt);
 		_bookName.update(dt);
@@ -2110,6 +2296,7 @@ void BookDetailPopUp::render(sf::RenderWindow& window)
 			_deleteButton.render(window);
 		}
 	}
+	_popUpMsg.render(window);
 }
 
 void BookDetailPopUp::_closePopUp()
@@ -2128,64 +2315,59 @@ void BookDetailPopUp::_editButtonOnClickHandler()
 void BookDetailPopUp::_doneButtonOnClickHandler()
 {
 	if (!_book->setBookId(_bookId.getText())) {
+		_popUpMsg.OpenPopUp(L"提示", L"书籍编号格式错误", L"", false);
 		return;
 	}
 
 	if (!_book->setBookName(_bookName.getText())) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"书名格式错误", L"", false);
 		return;
 	}
 
 	if (!_book->setAuthor(_bookAuthor.getText())) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"作者格式错误", L"", false);
 		return;
 	}
 
 	if (!_book->setPublisher(_bookPublisher.getText())) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"出版社格式错误", L"", false);
 		return;
 	}
 
 	if (!_book->setCategory(_bookCategory.getSelectedOption())) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"类别格式错误", L"", false);
 		return;
 	}
 
 	if (!_book->setPages(_totalPage.getText())) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"总页数格式错误", L"", false);
 		return;
 	}
 
 	if (!_book->setPublishDate(_publishDate.getText())) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"出版日期格式错误", L"", false);
 		return;
 	}
 
 	if (!_book->setPrice(_bookPrice.getText())) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"价格格式错误", L"", false);
 		return;
 	}
 
 	if (!_book->setRemainBook(_bookAvailableStock.getText())) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"剩余量格式错误", L"", false);
 		return;
 	}
 
 	if (!_book->setTotalBook(_bookTotalStock.getText())) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"总量格式错误", L"", false);
 		return;
 	}
 
 	if (!_book->setDescription(_bookDescription.getText())) {
-
+		_popUpMsg.OpenPopUp(L"提示", L"简述格式错误", L"", false);
 		return;
 	}
-
-	//if (!_book->setImgUrl(_bookImage.getIcon())) {
-
-	//	return;
-	//}
-	
 
 	if (_editFunction(_book)) {
 		_isEditing = false;
@@ -2199,4 +2381,28 @@ void BookDetailPopUp::_deleteButtonOnClickHandler()
 {
 	_deleteFunction(_book);
 	_isPopUp = false;
+}
+
+void BookDetailPopUp::_imageButtonOnClickHandler()
+{
+	_popUpMsg.OpenPopUp(L"设置书的封面", L"图片的绝对路径", L"", true, [&]() {return _setImageHandler(); });
+}
+
+bool BookDetailPopUp::_setImageHandler()
+{
+	std::string url = wstring_to_string(_popUpMsg.getMsg1());
+	sf::Image img;
+	if (!img.loadFromFile(url)) {
+		_popUpMsg.OpenPopUp(L"提示", L"图片路径错误", L"", false);
+		return false;
+	}
+
+	if (_book->setImgUrl(url)) {
+		_bookImage.setIcon(url);
+		return true;
+	}
+	else {
+		_popUpMsg.OpenPopUp(L"提示", L"图片格式错误", L"", false);
+		return false;
+	}
 }

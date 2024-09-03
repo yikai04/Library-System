@@ -12,8 +12,11 @@ StatisticsPage::StatisticsPage(User& user, PageManager& pageManager) :
 	_topBarButton5(sf::Vector2f(150, 70), sf::Vector2f(1480, 80), sf::Color::Transparent, L"用户设置", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Setting); }),
 	_topBarButton6(sf::Vector2f(100, 70), sf::Vector2f(1680, 80), sf::Color::Transparent, L"登录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Login); }),
 
-	_topBorrowedBooksTable(sf::Vector2f(800, 600), sf::Vector2f(130, 200), _font, 20, { L"排名", L"书名", L"借阅量" }, { 200.f, 400.f, 200.f }, 50.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false),
-	_topBorrowedUsersTable(sf::Vector2f(800, 600), sf::Vector2f(1000, 200), _font, 20, { L"排名", L"用户名", L"借阅量" }, { 200.f, 400.f, 200.f }, 50.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false)
+	_topBorrowedBooksTable(sf::Vector2f(800, 650), sf::Vector2f(130, 250), _font, 20, { L"排名", L"书名", L"借阅量" }, { 200.f, 400.f, 200.f }, 50.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false, [&](Book* book) {_bookDetailPopUpHandler(book); }, [](UserInfo* userInfo) {}, ALL_COLUMNS, -1),
+	_topBorrowedUsersTable(sf::Vector2f(800, 650), sf::Vector2f(1000, 250), _font, 20, { L"排名", L"用户名", L"借阅量" }, { 200.f, 400.f, 200.f }, 50.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false, [](Book* book) {}, [&](UserInfo* userInfo) {_userDetailEditHandler(userInfo); }, -1, ALL_COLUMNS),
+	_topBorrowedBooksTitle(sf::Vector2f(800, 70), sf::Vector2f(130, 180), _font, 40, sf::Color::Transparent, L"借阅量最多的书籍", L"借阅量最多的书籍", false),
+	_topBorrowedUsersTitle(sf::Vector2f(800, 70), sf::Vector2f(1000, 180), _font, 40, sf::Color::Transparent, L"借阅量最多的用户", L"借阅量最多的用户", false),
+	_bookDetailPopUp(_font)
 {
 	_backgroundTexture.loadFromFile("Image/Background(1920x1080).png");
 
@@ -23,8 +26,8 @@ StatisticsPage::StatisticsPage(User& user, PageManager& pageManager) :
 
 	//_topBorrowedBooksTable.setLeftArrowSize(sf::Vector2f(70, 70));
 	//_topBorrowedBooksTable.setRightArrowSize(sf::Vector2f(70, 70));
-	_topBorrowedBooksTable.setLeftArrowPosition(sf::Vector2f(660, 950));
-	_topBorrowedBooksTable.setRightArrowPosition(sf::Vector2f(750, 950));
+	_topBorrowedBooksTable.setLeftArrowPosition(sf::Vector2f(630, 950));
+	_topBorrowedBooksTable.setRightArrowPosition(sf::Vector2f(730, 950));
 	_topBorrowedBooksTable.setPageNumberPosition(sf::Vector2f(830, 960));
 }
 
@@ -35,6 +38,12 @@ StatisticsPage::~StatisticsPage()
 
 void StatisticsPage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 {
+	if (_bookDetailPopUp.getPopUpVisiblity())
+	{
+		_bookDetailPopUp.handleEvent(event, window);
+		return;
+	}
+
 	_topBarButton1.handleEvent(event, window);
 	_topBarButton2.handleEvent(event, window);
 	_topBarButton3.handleEvent(event, window);
@@ -43,11 +52,18 @@ void StatisticsPage::handleEvent(const sf::Event& event, sf::RenderWindow& windo
 	_topBarButton6.handleEvent(event, window);
 
 	_topBorrowedBooksTable.handleEvent(event, window);
-	_topBorrowedUsersTable.handleEvent(event, window);
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		_topBorrowedUsersTable.handleEvent(event, window);
+	}
 }
 
 void StatisticsPage::update(sf::Time dt)
 {
+	if (_bookDetailPopUp.getPopUpVisiblity()) {
+		_bookDetailPopUp.update(dt);
+		return;
+	}
+
 	_topBorrowedBooksTable.update(dt);
 	_topBorrowedUsersTable.update(dt);
 }
@@ -66,6 +82,10 @@ void StatisticsPage::render(sf::RenderWindow& window)
 
 	_topBorrowedBooksTable.render(window);
 	_topBorrowedUsersTable.render(window);
+	_topBorrowedBooksTitle.render(window);
+	_topBorrowedUsersTitle.render(window);
+
+	_bookDetailPopUp.render(window);
 	//window.display() called in main.cpp
 }
 
@@ -133,5 +153,19 @@ void StatisticsPage::_showTopBorrowedUsers()
 		rows.push_back({ std::to_wstring(i + 1), allUsers[i].getUsername(), std::to_wstring(allUsers[i].getBorrowVolume()) });
 	}
 
-	_topBorrowedUsersTable.setRows(std::move(rows));
+	_topBorrowedUsersTable.setRows(std::move(rows), {}, std::move(allUsers));
+}
+
+void StatisticsPage::_bookDetailPopUpHandler(Book* book)
+{
+	_bookDetailPopUp.setBook(book);
+	_bookDetailPopUp.setPopUpVisiblity(true, false);
+}
+
+void StatisticsPage::_userDetailEditHandler(UserInfo* user)
+{
+	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
+		_pageManager.userManagementPageSearch(std::to_wstring(user->getUserId()));
+		_pageManager.setPage(Page::Setting);
+	}
 }

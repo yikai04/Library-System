@@ -1359,7 +1359,7 @@ int Book::deleteBook(Book* book)
 {
 	if (checkBookIdValidaty(book->getBookId()))
 	{
-		return INVALID_ID;
+		return INVALID_BOOK_ID;
 	}
 
 	const char* sql = "DELETE FROM book_info WHERE id = ?";
@@ -1398,7 +1398,7 @@ int Book::updateBook(Book* book)
 {
 	if (checkBookIdValidaty(book->getBookId()))
 	{
-		return INVALID_ID;
+		return INVALID_BOOK_ID;
 	}
 
 	const char* sql = "UPDATE book_info SET book_name = ?, author = ?, publisher = ?, category = ?, publish_date = ?, pages = ?, total_book = ?, remain_book = ?, price = ?, description = ?, img_url = ?, borrow_volume = ?, del_flg = ? WHERE id = ?";
@@ -1445,6 +1445,17 @@ int Book::updateBook(Book* book)
 		sqlite3_finalize(stmt);
 		return SQLITE_DATABASE_ERROR;
 	}
+}
+
+//@return true if the id is valid(not exist), false otherwise
+bool Book::checkBookIdValidaty(std::wstring id)
+{
+	std::regex digitRegex("^\\d+$");
+	if (!std::regex_match(wstring_to_string(id), digitRegex)) {
+		return false;
+	}
+
+	return checkBookIdValidaty(std::stoi(id));
 }
 
 //@return true if the id is valid(not exist), false otherwise

@@ -16,6 +16,8 @@ class StatisticsPage : public PageBase
         void _logoutHandler();
 		void _showTopBorrowedBooks();
 		void _showTopBorrowedUsers();
+        void _bookDetailPopUpHandler(Book* book);
+		void _userDetailEditHandler(UserInfo* user);
 
     private:
         sf::Texture _backgroundTexture;
@@ -30,6 +32,10 @@ class StatisticsPage : public PageBase
 
 		Table _topBorrowedBooksTable;
 		Table _topBorrowedUsersTable;
+		TextDisplay _topBorrowedBooksTitle;
+		TextDisplay _topBorrowedUsersTitle;
+
+        BookDetailPopUp _bookDetailPopUp;
         //BarChart _categoryBorrowVolume;
 		//BarChart _monthBorrowVolume;
 };

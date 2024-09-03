@@ -14,15 +14,13 @@ LoginPage::LoginPage(User& user, PageManager& pageManager) :
     _username(550.f, sf::Vector2f(660, 500), _font, 35, L"用户名", sf::Color::Transparent,false),
 	_password(550.f, sf::Vector2f(660, 625), _font, 35, L"密码", sf::Color::Transparent, true),
 	_loginButton(sf::Vector2f(600, 70), sf::Vector2f(630, 755), [&]() {_loginHandler(); }, sf::Color::Transparent),
-	_signupButton(sf::Vector2f(600, 50), sf::Vector2f(630, 840), sf::Color::Transparent, L"没有账号？ 注册", _font, 22, 20, sf::Color(203, 140, 63, 255), sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Signup); }, false)
-
+	_signupButton(sf::Vector2f(600, 50), sf::Vector2f(630, 840), sf::Color::Transparent, L"没有账号？ 注册", _font, 22, 20, sf::Color(203, 140, 63, 255), sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Signup); }, false),
+	_popUpMsg(_font)
 {
     _backgroundTexture.loadFromFile("Image/LoginPage.png");
     _sprite.setScale(1, 1);
     _sprite.setPosition(0, 0);
     _sprite.setTexture(_backgroundTexture);
-
-
 }
 
 LoginPage::~LoginPage()
@@ -32,6 +30,12 @@ LoginPage::~LoginPage()
 
 void LoginPage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 {
+    if (_popUpMsg.getPopUpVisiblity())
+    {
+        _popUpMsg.handleEvent(event, window);
+        return;
+    }
+
     _topBarButton1.handleEvent(event, window);
     _topBarButton2.handleEvent(event, window);
     _topBarButton3.handleEvent(event, window);
@@ -47,6 +51,11 @@ void LoginPage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 
 void LoginPage::update(sf::Time dt)
 {
+    if (_popUpMsg.getPopUpVisiblity()) {
+        _popUpMsg.update(dt);
+        return;
+    }
+
 	_username.update(dt);
 	_password.update(dt);
 }
@@ -66,6 +75,7 @@ void LoginPage::render(sf::RenderWindow& window)
 	_password.render(window);
 	_loginButton.render(window);
 	_signupButton.render(window);
+	_popUpMsg.render(window);
     //window.display() called in main.cpp
 }
 
@@ -98,7 +108,10 @@ void LoginPage::_loginHandler()
 	int status = _user.login(_username.getText(), _password.getText());
     
     if (status == LOGIN_SUCESSFUL) {
-		if (_pageManager.getLastPage() != Page::Login && _pageManager.getLastPage() != Page::Signup)
+        if (_pageManager.getLastPage() == Page::Setting && _user.getSelfUserInfo().getRole() == UserType::Admin) {
+			_pageManager.setPage(Page::UserManagement);
+        }
+		else if (_pageManager.getLastPage() != Page::Login && _pageManager.getLastPage() != Page::Signup)
 			_pageManager.setPage(_pageManager.getLastPage());
 		else
 			_pageManager.setPage(Page::Home);
@@ -106,13 +119,15 @@ void LoginPage::_loginHandler()
     }
 	else if (status == WRONG_PASSWORD) {
         _password.setText(L"");
+        _popUpMsg.OpenPopUp(L"提示", L"密码错误", L"", false);
     }
     else if (status == INVALID_USERNAME) {
         _username.setText(L"");
         _password.setText(L"");
+		_popUpMsg.OpenPopUp(L"提示", L"用户名不存在", L"", false);
     }
     else {
-
+		_popUpMsg.OpenPopUp(L"提示", L"未知错误", L"", false);
     }
 }
 

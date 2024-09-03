@@ -1,2 +1,5 @@
-INSERT INTO `user_info` VALUES ('2023080001', '黄小明', 'xiaoming', '$2a$12$ZYNlHb.ImGL0mTbJRGbUA.cVXM7rXfojsSB5gu7ZotRbcBXPha26O', 'Admin',  '2024-07-26', 'M', 'xiaoming@qq.com', '19', '0');
-INSERT INTO `user_info` VALUES ('2023080002', '叶小华', 'xiaohua', '$2a$12$Nsi7pdQ8.3nXMSR3Wmd5LebHA.Dq.neSMi35mU8m9XCOtX7paIIWy', 'Teacher',  '2024-08-15', 'M', 'xiaohua@qq.com', '0', '0');
+INSERT INTO `user_info` VALUES ('2023080001', '黄小明', 'xiaoming', '$2a$12$ZYNlHb.ImGL0mTbJRGbUA.cVXM7rXfojsSB5gu7ZotRbcBXPha26O', 'Admin',  '2024-07-26', 'M', 'xiaoming@qq.com', '6', '0');
+INSERT INTO `user_info` VALUES ('2023080002', '叶小华', 'xiaohua', '$2a$12$Nsi7pdQ8.3nXMSR3Wmd5LebHA.Dq.neSMi35mU8m9XCOtX7paIIWy', 'Teacher',  '2024-08-15', 'M', 'xiaohua@qq.com', '9', '0');
+INSERT INTO `user_info` VALUES ('2023080003', '叶小美', 'xiaomei', '$2a$12$Nsi7pdQ8.3nXMSR3Wmd5LebHA.Dq.neSMi35mU8m9XCOtX7paIIWy', 'Student',  '2024-08-23', 'F', 'xiaomei@qq.com', '8', '0');
+INSERT INTO `user_info` VALUES ('2023080004', '曾龚', 'zenggong', '$2a$12$Nsi7pdQ8.3nXMSR3Wmd5LebHA.Dq.neSMi35mU8m9XCOtX7paIIWy', 'Student',  '2024-08-31', 'M', 'zenggong@qq.com', '4', '0');
+INSERT INTO `user_info` VALUES ('2023080005', '乔神', 'qiaogod', '$2a$12$Nsi7pdQ8.3nXMSR3Wmd5LebHA.Dq.neSMi35mU8m9XCOtX7paIIWy', 'Student',  '2024-08-31', 'M', 'god@qq.com', '5', '0');

@@ -15,7 +15,7 @@ class UserManagementPage : public PageBase
     protected:
         void _logoutHandler();
         void _showUsersDetail();
-		void _editUserHandler(UserInfo user);
+		void _editUserHandler(UserInfo* user);
 
     private:
         sf::Texture _backgroundTexture;

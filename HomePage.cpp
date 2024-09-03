@@ -52,8 +52,12 @@ void HomePage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 
 void HomePage::update(sf::Time dt)
 {
+    if (_bookDetailPopUp.getPopUpVisiblity()) {
+		_bookDetailPopUp.update(dt);
+		return;
+    }
+
     _textBox.update(dt);
-	_bookDetailPopUp.update(dt);
 }
 
 void HomePage::render(sf::RenderWindow& window)
@@ -116,7 +120,6 @@ void HomePage::_bookDetailPopUpHandler(Book* book)
 {
     _bookDetailPopUp.setBook(book);
     _bookDetailPopUp.setPopUpVisiblity(true, false);
-
 }
 
 void HomePage::_searchHandler()
