@@ -47,8 +47,7 @@ class UserInfo
 		std::vector<BorrowBookDetail> getBorrowedBooks();
 
 		static bool checkUsernameValidaty(std::wstring username);
-		static bool checkIdValidaty(std::wstring id);
-		static bool checkIdValidaty(int id);
+		static int checkIdValidaty(int id);
 		static std::vector<UserInfo> getAllUsers();
 	
 	private:

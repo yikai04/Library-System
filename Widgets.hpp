@@ -115,7 +115,9 @@ class TextBox
 		void setPosition(const sf::Vector2f position);
 		void setFontSize(const int fontSize);
 		void setBackgroundColor(const sf::Color backgroundColor);
+		void setIsActivated(bool isActivated);
 		std::wstring getText();
+		bool getIsActivated();
 		void handleEvent(const sf::Event& event, sf::RenderWindow& window);
 		void update(sf::Time dt);
 		void render(sf::RenderWindow& window);
@@ -441,7 +443,7 @@ class PopUpMsg
 		TextToogleButton _confirmButton;
 		IconButton _closeButton;
 		bool _isEditable;
-		bool _isEditing;
+		bool _isMsg2TextBoxUsed;
 		bool _isPopUp;
 		std::function<bool()> _confirmButtonHandler;
 };

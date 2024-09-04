@@ -47,6 +47,18 @@ void LoginPage::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 	_password.handleEvent(event, window);
 	_loginButton.handleEvent(event, window);
 	_signupButton.handleEvent(event, window);
+
+    if (event.type == sf::Event::KeyPressed) {
+        if (event.key.code == sf::Keyboard::Enter) {
+            _loginHandler();
+        }
+        else if (event.key.code == sf::Keyboard::Tab) {
+            if (_username.getIsActivated()) {
+				_username.setIsActivated(false);
+                _password.setIsActivated(true);
+            }
+        }
+    }
 }
 
 void LoginPage::update(sf::Time dt)
@@ -110,6 +122,9 @@ void LoginPage::_loginHandler()
     if (status == LOGIN_SUCESSFUL) {
         if (_pageManager.getLastPage() == Page::Setting && _user.getSelfUserInfo().getRole() == UserType::Admin) {
 			_pageManager.setPage(Page::UserManagement);
+        }
+        else if (_pageManager.getLastPage() == Page::UserManagement && _user.getSelfUserInfo().getRole() != UserType::Admin) {
+			_pageManager.setPage(Page::Setting);
         }
 		else if (_pageManager.getLastPage() != Page::Login && _pageManager.getLastPage() != Page::Signup)
 			_pageManager.setPage(_pageManager.getLastPage());

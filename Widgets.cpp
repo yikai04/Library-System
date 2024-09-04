@@ -141,11 +141,16 @@ void Button::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 		}
 
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-			if (_cursor.loadFromSystem(sf::Cursor::Arrow)) {
+			if (_cursor.loadFromSystem(sf::Cursor::Wait)) {
 				window.setMouseCursor(_cursor);
 				_cursorType = sf::Cursor::Arrow;
 			}
 			_onClickHandler();
+			setButtonState(ButtonState::normal);
+			if (_cursor.loadFromSystem(sf::Cursor::Arrow)) {
+				window.setMouseCursor(_cursor);
+				_cursorType = sf::Cursor::Arrow;
+			}
 		}
 	}
 	else if (_cursorType != sf::Cursor::Arrow) {
@@ -567,9 +572,20 @@ void TextBox::setBackgroundColor(const sf::Color backgroundColor)
 	_textBox.setFillColor(backgroundColor);
 }
 
+void TextBox::setIsActivated(bool isActivated)
+{
+	_isActivated = isActivated;
+	_caretPosition = 0;
+}
+
 std::wstring TextBox::getText()
 {
 	return _inputString;
+}
+
+bool TextBox::getIsActivated()
+{
+	return _isActivated;
 }
 
 void TextBox::handleEvent(const sf::Event& event, sf::RenderWindow& window) {
@@ -604,7 +620,7 @@ void TextBox::handleEvent(const sf::Event& event, sf::RenderWindow& window) {
 					_inputString.erase(_inputString.end() - _caretPosition - 1);
 				}
 			}
-			else if (event.text.unicode != '\b') {
+			else if (event.text.unicode != '\b' && event.text.unicode != '\t') {
 				if (_inputText.getGlobalBounds().width < _textBox.getSize().x - 40.f || _isMultiLine) {
 					if (!_isMultiLine || _inputText.getGlobalBounds().height < _textBox.getSize().y - 20.f || _inputText.getGlobalBounds().width < _textBox.getSize().x - 40.f) {
 						if (_caretPosition == 0) {
@@ -671,7 +687,7 @@ void TextBox::render(sf::RenderWindow& window) {
 		window.draw(_inputText);
 	}
 
-	if (_caretVisible) {
+	if (_isActivated && _caretVisible) {
 		window.draw(_caret);
 	}
 }
@@ -1838,7 +1854,9 @@ void Table::render(sf::RenderWindow& window)
 Table::_row::_row(sf::Vector2f position, const sf::Font& font, const int& fontSize, std::vector<std::wstring> rowData, std::vector<float> rowWidth, float rowHeight, sf::Color backgroundColor) :
 	_rowData(rowData),
 	_rowWidth(rowWidth),
-	_rowHeight(rowHeight)
+	_rowHeight(rowHeight),
+	_bookButtonIndex(-1),
+	_userButtonIndex(-1)
 {
 	float positionX = position.x;
 	for (size_t i = 0; i < _rowData.size(); i++) {
@@ -1989,7 +2007,7 @@ PopUpMsg::PopUpMsg(const sf::Font& font) :
 	_confirmButton(sf::Vector2f(50, 70), sf::Vector2f(1130, 640), sf::Color::Transparent, L"OK", font, 35, 38, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_confirmButtonOnClickHandler(); }),
 	_closeButton(sf::Vector2f(60, 60), sf::Vector2f(1200, 390), "Icon/closeButton.png", [&]() {_closePopUp(); }),
 	_isEditable(false),
-	_isEditing(false),
+	_isMsg2TextBoxUsed(false),
 	_isPopUp(false),
 	_confirmButtonHandler([]() {return true; })
 {
@@ -2016,7 +2034,9 @@ PopUpMsg::~PopUpMsg()
 void PopUpMsg::OpenPopUp(std::wstring title, std::wstring msg1, std::wstring msg2, bool isEditable, std::function<bool()> confirmButtonHandler)
 {
 	_msg1TextBox.setText(L"");
+	_msg1TextBox.setPlaceHolderText(L"");
 	_msg2TextBox.setText(L"");
+	_msg2TextBox.setPlaceHolderText(L"");
 
 	if (isEditable) {
 		_msg1TextBox.setPlaceHolderText(msg1);
@@ -2040,10 +2060,12 @@ void PopUpMsg::OpenPopUp(std::wstring title, std::wstring msg1, std::wstring msg
 	{
 		_msg1TextBox.setFontSize(36);
 		_msg2TextBox.setBackgroundColor(sf::Color::Transparent);
+		_isMsg2TextBoxUsed = false;
 	}
 	else {
 		_msg1TextBox.setFontSize(30);
 		_msg2TextBox.setBackgroundColor(sf::Color(240, 240, 240, 255));
+		_isMsg2TextBoxUsed = true;
 	}
 
 	_isEditable = isEditable;
@@ -2074,7 +2096,24 @@ void PopUpMsg::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 		_confirmButton.handleEvent(event, window);
 		if (_isEditable) {
 			_msg1TextBox.handleEvent(event, window);
-			_msg2TextBox.handleEvent(event, window);
+			if (_isMsg2TextBoxUsed) {
+				_msg2TextBox.handleEvent(event, window);
+
+				if (event.type == sf::Event::KeyPressed) {
+					if (event.key.code == sf::Keyboard::Tab) {
+						if (_msg1TextBox.getIsActivated()) {
+							_msg1TextBox.setIsActivated(false);
+							_msg2TextBox.setIsActivated(true);
+						}
+					}
+				}
+			}
+
+			if (event.type == sf::Event::KeyPressed) {
+				if (event.key.code == sf::Keyboard::Enter) {
+					_confirmButtonHandler();
+				}
+			}
 		}
 	}
 }
@@ -2083,7 +2122,9 @@ void PopUpMsg::update(sf::Time dt)
 {
 	if (_isPopUp && _isEditable) {
 		_msg1TextBox.update(dt);
-		_msg2TextBox.update(dt);
+		if (_isMsg2TextBoxUsed) {
+			_msg2TextBox.update(dt);
+		}
 	}
 }
 
@@ -2159,10 +2200,6 @@ BookDetailPopUp::BookDetailPopUp(const sf::Font& font, bool isPopUp, bool isEdit
 	_popup.setFillColor(sf::Color(255, 255, 255, 255));
 
 	_bookCategory.setOptions({ L"小说类", L"传记与回忆录", L"历史与文化", L"科学与自然", L"商业与经济", L"健康与生活方式", L"艺术与设计", L"语言与文学", L"参考手册", L"儿童读物", L"其他" });
-
-	if (_isNewMode) {
-		_editButtonOnClickHandler();
-	}
 }
 
 BookDetailPopUp::~BookDetailPopUp()
@@ -2191,6 +2228,10 @@ void BookDetailPopUp::setPopUpVisiblity(bool isVisible, bool isNewMode)
 {
 	_isPopUp = isVisible;
 	_isNewMode = isNewMode;
+
+	if (_isNewMode) {
+		_editButtonOnClickHandler();
+	}
 }
 
 void BookDetailPopUp::setEditable(bool isEditable)
@@ -2310,6 +2351,19 @@ void BookDetailPopUp::_editButtonOnClickHandler()
 	_bookCategory.setBackgroudColor(sf::Color(230, 230, 230, 255));
 	_editButton.setIcon("Icon/doneIcon.png");
 	_editButton.setOnClickHandler([&]() {_doneButtonOnClickHandler(); });
+
+	if (_isNewMode) {
+		_bookId.setBackgroundColor(sf::Color(240, 240, 240, 255));
+	}
+	_bookName.setBackgroundColor(sf::Color(240, 240, 240, 255));
+	_bookAuthor.setBackgroundColor(sf::Color(240, 240, 240, 255));
+	_bookPublisher.setBackgroundColor(sf::Color(240, 240, 240, 255));
+	_totalPage.setBackgroundColor(sf::Color(240, 240, 240, 255));
+	_publishDate.setBackgroundColor(sf::Color(240, 240, 240, 255));
+	_bookPrice.setBackgroundColor(sf::Color(240, 240, 240, 255));
+	_bookAvailableStock.setBackgroundColor(sf::Color(240, 240, 240, 255));
+	_bookTotalStock.setBackgroundColor(sf::Color(240, 240, 240, 255));
+	_bookDescription.setBackgroundColor(sf::Color(240, 240, 240, 255));
 }
 
 void BookDetailPopUp::_doneButtonOnClickHandler()
@@ -2354,13 +2408,13 @@ void BookDetailPopUp::_doneButtonOnClickHandler()
 		return;
 	}
 
-	if (!_book->setRemainBook(_bookAvailableStock.getText())) {
-		_popUpMsg.OpenPopUp(L"提示", L"剩余量格式错误", L"", false);
-		return;
-	}
-
 	if (!_book->setTotalBook(_bookTotalStock.getText())) {
 		_popUpMsg.OpenPopUp(L"提示", L"总量格式错误", L"", false);
+		return;
+	}
+	
+	if (!_book->setRemainBook(_bookAvailableStock.getText())) {
+		_popUpMsg.OpenPopUp(L"提示", L"剩余量格式错误", L"", false);
 		return;
 	}
 
@@ -2374,6 +2428,19 @@ void BookDetailPopUp::_doneButtonOnClickHandler()
 		_bookCategory.setBackgroudColor(sf::Color::Transparent);
 		_editButton.setIcon("Icon/editIcon(White).png");
 		_editButton.setOnClickHandler([&]() {_editButtonOnClickHandler(); });
+
+		if (_isNewMode) {
+			_bookId.setBackgroundColor(sf::Color::Transparent);
+		}
+		_bookName.setBackgroundColor(sf::Color::Transparent);
+		_bookAuthor.setBackgroundColor(sf::Color::Transparent);
+		_bookPublisher.setBackgroundColor(sf::Color::Transparent);
+		_totalPage.setBackgroundColor(sf::Color::Transparent);
+		_publishDate.setBackgroundColor(sf::Color::Transparent);
+		_bookPrice.setBackgroundColor(sf::Color::Transparent);
+		_bookAvailableStock.setBackgroundColor(sf::Color::Transparent);
+		_bookTotalStock.setBackgroundColor(sf::Color::Transparent);
+		_bookDescription.setBackgroundColor(sf::Color::Transparent);
 	}
 }
 

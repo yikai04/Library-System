@@ -23,6 +23,7 @@
 #define ID_EXIST 19
 #define NO_BOOK 20
 #define OVER_LIMIT 21
+#define DELETED 22
 
 #include "Dependencies/sqlite3/sqlite3.h"
 #include "Dependencies/Bcrypt/BCrypt.hpp"
@@ -35,7 +36,7 @@ constexpr const char* CREATE_USER_INFO_TABLE_SQLCMD = "CREATE TABLE IF NOT EXIST
 														`username` varchar(50) DEFAULT NULL , \
 														`password` varchar(200) DEFAULT NULL , \
 														`role` varchar(50) DEFAULT 'Student' , \
-														`register_date` date DEFAULT NULL , \
+														`register_date` varchar(21) DEFAULT 'NULL' , \
 														`gender` varchar(1) DEFAULT NULL , \
 														`email` varchar(50) DEFAULT NULL , \
 														`borrow_volume` int(10) DEFAULT '0', \
@@ -49,7 +50,7 @@ constexpr const char* CREATE_BOOK_INFO_TABLE_SQLCMD = "CREATE TABLE IF NOT EXIST
 														`author` varchar(50) DEFAULT NULL , \
 														`publisher` varchar(50) DEFAULT NULL , \
 														`category` varchar(50) DEFAULT '其他' , \
-														`publish_date` date DEFAULT NULL , \
+														`publish_date` varchar(21) DEFAULT NULL , \
 														`pages` int(10) DEFAULT '0' , \
 														`total_book` INT(10) DEFAULT '1' , \
 														`remain_book` INT(10) DEFAULT '1' , \
@@ -65,9 +66,9 @@ constexpr const char* CREATE_BORROW_INFO_TABLE_SQLCMD = "CREATE TABLE IF NOT EXI
 														`id` INT(11) NOT NULL , \
 														`book_id` INT(11) DEFAULT NULL , \
 														`user_id` INT(11) DEFAULT NULL , \
-														`borrow_date` date DEFAULT NULL , \
-														`due_date` date DEFAULT NULL , \
-														`return_date` date DEFAULT NULL , \
+														`borrow_date` varchar(21) DEFAULT 'NULL' , \
+														`due_date` varchar(21) DEFAULT 'NULL' , \
+														`return_date` varchar(21) DEFAULT 'NULL' , \
 														PRIMARY KEY(`id`) \
 														);";
 

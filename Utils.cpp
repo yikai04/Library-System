@@ -475,6 +475,11 @@ int Date::getDay() {
 
 // Private methods for parsing and formatting
 void Date::parseDateString(const std::string& date) {
+    std::regex datePattern("\\d{4}-\\d{2}-\\d{2}");
+    if (!std::regex_match(date, datePattern)) {
+        isNullDate = true;
+        return;
+    }
     std::istringstream ss(date);
     ss >> std::get_time(&dateStruct, "%Y-%m-%d");
     if (ss.fail()) {
@@ -486,6 +491,11 @@ void Date::parseDateString(const std::string& date) {
 }
 
 void Date::parseWDateString(const std::wstring& date) {
+    std::regex datePattern("\\d{4}-\\d{2}-\\d{2}");
+    if (!std::regex_match(wstring_to_string(date), datePattern)) {
+        isNullDate = true;
+        return;
+    }
     std::wistringstream ss(date);
     ss >> std::get_time(&dateStruct, L"%Y-%m-%d");
     if (ss.fail()) {

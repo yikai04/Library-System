@@ -85,8 +85,7 @@ class Book
 		static int deleteBook(Book* book);
 		static int updateBook(Book* book);
 
-		static bool checkBookIdValidaty(std::wstring id);
-		static bool checkBookIdValidaty(int id);
+		static int checkBookIdValidaty(int id);
 	
 	private:
 		void _loadBookInfosFromDB();

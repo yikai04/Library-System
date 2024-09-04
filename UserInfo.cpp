@@ -565,19 +565,8 @@ bool UserInfo::checkUsernameValidaty(std::wstring username)
 	}
 }
 
-//@return true if the id is valid(not exist), false otherwise
-bool UserInfo::checkIdValidaty(std::wstring id)
-{
-	std::regex digitRegex("^\\d+$");
-	if (!std::regex_match(wstring_to_string(id), digitRegex)) {
-		return false;
-	}
-
-	return checkIdValidaty(std::stoi(id));
-}
-
-//@return true if the id is valid(not exist), false otherwise
-bool UserInfo::checkIdValidaty(int id)
+//@return true if the id is valid(not exist), false otherwise, DELETED if the id account is deleted
+int UserInfo::checkIdValidaty(int id)
 {
 	const char* sql = "SELECT * FROM user_info WHERE id = ?";
 	int rc;
@@ -598,6 +587,10 @@ bool UserInfo::checkIdValidaty(int id)
 
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_ROW) {
+		int delFlg = sqlite3_column_int(stmt, 9);
+		if (delFlg) {
+			return DELETED;
+		}
 		sqlite3_finalize(stmt);
 		return false;
 	}
@@ -610,7 +603,7 @@ bool UserInfo::checkIdValidaty(int id)
 std::vector<UserInfo> UserInfo::getAllUsers()
 {
 	std::vector<UserInfo> usersInfo;
-	const char* sql = "SELECT id FROM user_info";
+	const char* sql = "SELECT id, del_flg FROM user_info";
 	int rc;
 	sqlite3_stmt* stmt;
 	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
@@ -621,8 +614,11 @@ std::vector<UserInfo> UserInfo::getAllUsers()
 	}
 
 	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-		int id = sqlite3_column_int(stmt, 0);
-		usersInfo.push_back(UserInfo(id));
+		int delFlg = sqlite3_column_int(stmt, 1);
+		if (!delFlg) {
+			int id = sqlite3_column_int(stmt, 0);
+			usersInfo.push_back(UserInfo(id));
+		}
 	}
 
 	sqlite3_finalize(stmt);

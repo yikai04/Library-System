@@ -186,16 +186,17 @@ void RecordsPage::_openBorrowBookPopUp()
 
 void RecordsPage::_openReturnBookPopUp()
 {
-	_popUpMsg.OpenPopUp(L"还书操作", L"书籍编号", L"", true, [&]() {return _returnBookHandler(); });
+	_popUpMsg.OpenPopUp(L"还书操作", L"书籍编号", L"用户编号", true, [&]() {return _returnBookHandler(); });
 }
 
 bool RecordsPage::_borrowBookHandler()
 {
-	int status = _user.borrowBook(_popUpMsg.getMsg1(), _popUpMsg.getMsg1());
+	int status = _user.borrowBook(_popUpMsg.getMsg1(), _popUpMsg.getMsg2());
 	if (status == SUCESSFUL)
 	{
 		_showBorrowRecords();
-		return true;
+		_popUpMsg.OpenPopUp(L"提示", L"借书成功", L"", false);
+		return false;
 	}
 	else if (status == INVALID_USER_ID)
 	{
@@ -221,15 +222,26 @@ bool RecordsPage::_borrowBookHandler()
 
 bool RecordsPage::_returnBookHandler()
 {
-	int status = _user.returnBook(_popUpMsg.getMsg1());
+	int status = _user.returnBook(_popUpMsg.getMsg1(), _popUpMsg.getMsg2());
 	if (status == SUCESSFUL)
 	{
 		_showBorrowRecords();
-		return true;
+		_popUpMsg.OpenPopUp(L"提示", L"还书成功", L"", false);
+		return false;
+	}
+	else if (status == INVALID_USER_ID)
+	{
+		_popUpMsg.OpenPopUp(L"提示", L"用户ID无效", L"", false);
+		return false;
 	}
 	else if (status == INVALID_BOOK_ID)
 	{
 		_popUpMsg.OpenPopUp(L"提示", L"书籍ID无效", L"", false);
+		return false;
+	}
+	else if (status == NO_BOOK)
+	{
+		_popUpMsg.OpenPopUp(L"提示", L"此用户未借此书", L"", false);
 		return false;
 	}
 	else

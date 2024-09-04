@@ -111,6 +111,10 @@ void SettingPage::onEnter()
 
 		_role.setOptions({ L"学生", L"教师", L"管理员" });
 	}
+	else {
+		_topBarButton5.setText(L"用户设置");
+		_topBarButton5.setOnClickHandler([&]() {_pageManager.setPage(Page::Setting); });
+	}
 
 	if (_user.getSelfUserInfo().getRole() != UserType::Guest) {
 		_topBarButton6.setText(L"登出");

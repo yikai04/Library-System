@@ -409,6 +409,11 @@ bool Book::setRemainBook(std::wstring remainBook)
 		return false;
 	}
 
+	if (_remainBook > _totalBook)
+	{
+		return false;
+	}
+
 	return true;
 }
 
@@ -843,6 +848,11 @@ bool Book::changeRemainBook(std::wstring remainBook)
 		return true;
 	}
 
+	if (remainBookInt > _totalBook)
+	{
+		return false;
+	}
+
 	const char* sql = "UPDATE book_info SET remain_book = ? WHERE id = ?";
 	int rc;
 	sqlite3_stmt* stmt;
@@ -1027,7 +1037,7 @@ bool Book::addBorrowVolume()
 std::vector<Book> Book::getBooksByCategory(BookCategory category)
 {
 	std::vector<Book> books;
-	const char* sql = "SELECT id FROM book_info WHERE category = ?";
+	const char* sql = "SELECT id, del_flg FROM book_info WHERE category = ?";
 	int rc;
 	sqlite3_stmt* stmt;
 	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
@@ -1047,7 +1057,10 @@ std::vector<Book> Book::getBooksByCategory(BookCategory category)
 
 	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 		int id = sqlite3_column_int(stmt, 0);
-		books.push_back(Book(id));
+		int delFlg = sqlite3_column_int(stmt, 1);
+		if (!delFlg) {
+			books.push_back(Book(id));
+		}
 	}
 
 	sqlite3_finalize(stmt);
@@ -1057,7 +1070,7 @@ std::vector<Book> Book::getBooksByCategory(BookCategory category)
 std::vector<Book> Book::getAllBooks()
 {
 	std::vector<Book> books;
-	const char* sql = "SELECT id FROM book_info";
+	const char* sql = "SELECT id, del_flg FROM book_info";
 	int rc;
 	sqlite3_stmt* stmt;
 	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
@@ -1069,7 +1082,10 @@ std::vector<Book> Book::getAllBooks()
 
 	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
 		int id = sqlite3_column_int(stmt, 0);
-		books.push_back(Book(id));
+		int delFlg = sqlite3_column_int(stmt, 1);
+		if (!delFlg) {
+			books.push_back(Book(id));
+		}
 	}
 
 	sqlite3_finalize(stmt);
@@ -1123,8 +1139,11 @@ std::vector<Book> Book::searchBooksInfo(std::wstring searchWord, const std::wstr
 
 	rc = sqlite3_step(stmt);
 	while (rc == SQLITE_ROW) {
-		Book book(sqlite3_column_int(stmt, 0));
-		books.push_back(book);
+		int delFlg = sqlite3_column_int(stmt, 12);
+		if (!delFlg) {
+			Book book(sqlite3_column_int(stmt, 0));
+			books.push_back(book);
+		}
 
 		rc = sqlite3_step(stmt);
 	}
@@ -1179,8 +1198,11 @@ std::vector<Book> Book::searchBooksInfoByName(std::wstring bookName, const std::
 
 	rc = sqlite3_step(stmt);
 	while (rc == SQLITE_ROW) {
-		Book book(sqlite3_column_int(stmt, 0));
-		books.push_back(book);
+		int delFlg = sqlite3_column_int(stmt, 12);
+		if (!delFlg) {
+			Book book(sqlite3_column_int(stmt, 0));
+			books.push_back(book);
+		}
 
 		rc = sqlite3_step(stmt);
 	}
@@ -1235,8 +1257,11 @@ std::vector<Book> Book::searchBooksInfoByAuthor(std::wstring author, const std::
 
 	rc = sqlite3_step(stmt);
 	while (rc == SQLITE_ROW) {
-		Book book(sqlite3_column_int(stmt, 0));
-		books.push_back(book);
+		int delFlg = sqlite3_column_int(stmt, 12);
+		if (!delFlg) {
+			Book book(sqlite3_column_int(stmt, 0));
+			books.push_back(book);
+		}
 
 		rc = sqlite3_step(stmt);
 	}
@@ -1291,9 +1316,11 @@ std::vector<Book> Book::searchBooksInfoByPublisher(std::wstring publisher, const
 
 	rc = sqlite3_step(stmt);
 	while (rc == SQLITE_ROW) {
-		Book book(sqlite3_column_int(stmt, 0));
-
-		books.push_back(book);
+		int delFlg = sqlite3_column_int(stmt, 12);
+		if (!delFlg) {
+			Book book(sqlite3_column_int(stmt, 0));
+			books.push_back(book);
+		}
 
 		rc = sqlite3_step(stmt);
 	}
@@ -1304,9 +1331,13 @@ std::vector<Book> Book::searchBooksInfoByPublisher(std::wstring publisher, const
 
 int Book::addBook(Book* book)
 {
-	if (!checkBookIdValidaty(book->getBookId()))
-	{
-		return ID_EXIST;
+	int bookCheck = checkBookIdValidaty(book->getBookId());
+	
+	if (bookCheck == DELETED) {
+		return updateBook(book);
+	}
+	else if (bookCheck == false) {
+		return INVALID_BOOK_ID;
 	}
 
 	const char* sql = "INSERT INTO book_info (id, book_name, author, publisher, category, publish_date, pages, total_book, remain_book, price, description, img_url, borrow_volume, del_flg) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -1362,7 +1393,7 @@ int Book::deleteBook(Book* book)
 		return INVALID_BOOK_ID;
 	}
 
-	const char* sql = "DELETE FROM book_info WHERE id = ?";
+	const char* sql = "UPDATE book_info SET del_flg = 1 WHERE id = ?";
 	int rc;
 	sqlite3_stmt* stmt;
 	rc = sqlite3_prepare_v2(mDatabase, sql, -1, &stmt, NULL);
@@ -1448,18 +1479,7 @@ int Book::updateBook(Book* book)
 }
 
 //@return true if the id is valid(not exist), false otherwise
-bool Book::checkBookIdValidaty(std::wstring id)
-{
-	std::regex digitRegex("^\\d+$");
-	if (!std::regex_match(wstring_to_string(id), digitRegex)) {
-		return false;
-	}
-
-	return checkBookIdValidaty(std::stoi(id));
-}
-
-//@return true if the id is valid(not exist), false otherwise
-bool Book::checkBookIdValidaty(int id)
+int Book::checkBookIdValidaty(int id)
 {
 	const char* sql = "SELECT * FROM book_info WHERE id = ?";
 	int rc;
@@ -1480,8 +1500,17 @@ bool Book::checkBookIdValidaty(int id)
 
 	rc = sqlite3_step(stmt);
 	if (rc == SQLITE_ROW) {
-		sqlite3_finalize(stmt);
-		return false;
+		int delFlg = sqlite3_column_int(stmt, 13);
+		if (delFlg == 0)
+		{
+			sqlite3_finalize(stmt);
+			return false;
+		}
+		else
+		{
+			sqlite3_finalize(stmt);
+			return DELETED;
+		}
 	}
 	else {
 		sqlite3_finalize(stmt);
