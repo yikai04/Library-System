@@ -141,16 +141,16 @@ void Button::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 		}
 
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-			if (_cursor.loadFromSystem(sf::Cursor::Wait)) {
+			/*if (_cursor.loadFromSystem(sf::Cursor::Wait)) {
 				window.setMouseCursor(_cursor);
-				_cursorType = sf::Cursor::Arrow;
-			}
+				_cursorType = sf::Cursor::Wait;
+			}*/
 			_onClickHandler();
-			setButtonState(ButtonState::normal);
-			if (_cursor.loadFromSystem(sf::Cursor::Arrow)) {
+			//setButtonState(ButtonState::normal);
+			/*if (_cursor.loadFromSystem(sf::Cursor::Arrow)) {
 				window.setMouseCursor(_cursor);
 				_cursorType = sf::Cursor::Arrow;
-			}
+			}*/
 		}
 	}
 	else if (_cursorType != sf::Cursor::Arrow) {
@@ -1957,7 +1957,12 @@ void Table::_updateRows()
 		}
 	}
 
-	_pageNumber.setTotalPage(_rowDisplay.size() / _totalRows + 1);
+	if (_rowDisplay.size() % _totalRows == 0) {
+		_pageNumber.setTotalPage(_rowDisplay.size() / _totalRows);
+	}
+	else {
+		_pageNumber.setTotalPage(_rowDisplay.size() / _totalRows + 1);
+	}
 }
 
 void Table::_updateHeaders()
@@ -1987,7 +1992,8 @@ void Table::_previousPage()
 void Table::_nextPage()
 {
 	if (_currentDisplayPage * _totalRows + _totalRows < _rowDisplay.size()) {
-		_currentDisplayPage++; _pageNumber.setCurrentPage(_currentDisplayPage + 1);
+		_currentDisplayPage++;
+		_pageNumber.setCurrentPage(_currentDisplayPage + 1);
 	}
 }
 
@@ -2064,7 +2070,6 @@ void PopUpMsg::OpenPopUp(std::wstring title, std::wstring msg1, std::wstring msg
 	}
 	else {
 		_msg1TextBox.setFontSize(30);
-		_msg2TextBox.setBackgroundColor(sf::Color(240, 240, 240, 255));
 		_isMsg2TextBoxUsed = true;
 	}
 
@@ -2156,7 +2161,7 @@ void PopUpMsg::_confirmButtonOnClickHandler()
 
 
 
-BookDetailPopUp::BookDetailPopUp(const sf::Font& font, bool isPopUp, bool isEditable, bool isNewMode, std::function<bool(Book*)> editFunction, std::function<void(Book*)> deleteFunction) :
+BookDetailPopUp::BookDetailPopUp(const sf::Font& font, bool isPopUp, bool isEditable, bool isNewMode, std::function<bool(Book*)> editFunction, std::function<void(Book*)> deleteFunction, std::function<void()> closeFunction) :
 	_bookName(sf::Vector2f(600, 50), sf::Vector2f(600, 200), font, 40, L"书名", sf::Color::Transparent),
 	_bookAuthorTitle(sf::Vector2f(100, 50), sf::Vector2f(600, 280), font, 20, sf::Color::Transparent, L"作者", L"", false),
 	_bookAuthor(sf::Vector2f(300, 50), sf::Vector2f(700, 280), font, 20, L"作者", sf::Color::Transparent),
@@ -2185,6 +2190,7 @@ BookDetailPopUp::BookDetailPopUp(const sf::Font& font, bool isPopUp, bool isEdit
 	_popUpMsg(font),
 	_editFunction(editFunction),
 	_deleteFunction(deleteFunction),
+	_closeFunction(closeFunction),
 	_isPopUp(isPopUp),
 	_isEditable(isEditable),
 	_isNewMode(isNewMode),
@@ -2343,6 +2349,7 @@ void BookDetailPopUp::render(sf::RenderWindow& window)
 void BookDetailPopUp::_closePopUp()
 {
 	_isPopUp = false;
+	_closeFunction();
 }
 
 void BookDetailPopUp::_editButtonOnClickHandler()
@@ -2452,20 +2459,19 @@ void BookDetailPopUp::_deleteButtonOnClickHandler()
 
 void BookDetailPopUp::_imageButtonOnClickHandler()
 {
-	_popUpMsg.OpenPopUp(L"设置书的封面", L"图片的绝对路径", L"", true, [&]() {return _setImageHandler(); });
+	_popUpMsg.OpenPopUp(L"设置书的封面", L"图片的路径", L"", true, [&]() {return _setImageHandler(); });
 }
 
 bool BookDetailPopUp::_setImageHandler()
 {
-	std::string url = wstring_to_string(_popUpMsg.getMsg1());
 	sf::Image img;
-	if (!img.loadFromFile(url)) {
-		_popUpMsg.OpenPopUp(L"提示", L"图片路径错误", L"", false);
+	if (!img.loadFromFile(wstring_to_string(_popUpMsg.getMsg1()))) {
+		_popUpMsg.OpenPopUp(L"提示", L"图片路径错误", L"可输入由本项目的目录的相对路径", false);
 		return false;
 	}
 
-	if (_book->setImgUrl(url)) {
-		_bookImage.setIcon(url);
+	if (_book->setImgUrl(_popUpMsg.getMsg1())) {
+		_bookImage.setIcon(wstring_to_string(_popUpMsg.getMsg1()));
 		return true;
 	}
 	else {

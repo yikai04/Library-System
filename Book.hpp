@@ -40,6 +40,7 @@ class Book
 		double getPrice();
 		std::wstring getDescription();
 		std::string getImgUrl();
+		std::wstring getImgUrlWstring();
 		int getBorrowVolume();
 		bool getDelFlg();
 
@@ -54,7 +55,7 @@ class Book
 		bool setRemainBook(std::wstring remainBook);
 		bool setPrice(std::wstring price);
 		bool setDescription(std::wstring description);
-		bool setImgUrl(std::string imgUrl);
+		bool setImgUrl(std::wstring imgUrl);
 		bool setBorrowVolume(std::wstring borrowVolume);
 		bool setDelFlg(std::wstring delFlg);
 
@@ -69,7 +70,7 @@ class Book
 		bool changeRemainBook(std::wstring remainBook);
 		bool changePrice(std::wstring price);
 		bool changeDescription(std::wstring description);
-		bool changeImgUrl(std::string imgUrl);
+		bool changeImgUrl(std::wstring imgUrl);
 
 		bool addBorrowVolume();
 
@@ -99,8 +100,8 @@ class Book
 		int _totalBook;
 		int _remainBook;
 		double _price;
-		std::wstring _description;	
-		std::string _imgUrl;
+		std::wstring _description;
+		std::wstring _imgUrl;
 		int _borrowVolume;
 		bool _delFlg;
 };

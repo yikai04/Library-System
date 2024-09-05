@@ -279,7 +279,6 @@ class BookDisplay
 		void setBook(Book* book);
 		void setBookCover(const std::string& bookCoverPath);
 		void setBookName(const std::wstring& bookName);
-		//void setAuthor(const std::wstring& author);
 		void setPosition(const sf::Vector2f& position);
 		void setOnClickHandler(std::function<void()> onClickHandler);
 		void setVisiblity(bool isVisible);
@@ -451,7 +450,7 @@ class PopUpMsg
 class BookDetailPopUp
 {
 	public:
-		BookDetailPopUp(const sf::Font& font, bool isPopUp = false, bool isEditable = false, bool isNewMode = false, std::function<bool(Book*)> editFunction = [](Book* book) {return true; }, std::function<void(Book*)> deleteFunction = [](Book* book) {});
+		BookDetailPopUp(const sf::Font& font, bool isPopUp = false, bool isEditable = false, bool isNewMode = false, std::function<bool(Book*)> editFunction = [](Book* book) {return true; }, std::function<void(Book*)> deleteFunction = [](Book* book) {}, std::function<void()> closeFunction = []() {});
 		~BookDetailPopUp();
 		void setBook(Book* book);
 		void setPopUpVisiblity(bool isVisible, bool isNewMode);
@@ -502,5 +501,6 @@ class BookDetailPopUp
 		bool _isNewMode;
 		std::function<bool(Book*)> _editFunction;
 		std::function<void(Book*)> _deleteFunction;
+		std::function<void()> _closeFunction;
 		Book* _book;
 };

@@ -1,4 +1,0 @@
-Index: 1
-Coloums: 1
-Head: img_url
-Data: s4030813.jpg

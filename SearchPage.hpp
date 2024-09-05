@@ -16,6 +16,7 @@ class SearchPage : public PageBase
     protected:
         void _searchBarHandler();
         void _logoutHandler();
+		void _refreshBooksDisplay();
         void _bookDetailPopUpHandler(Book* book);
 		bool _editBookHandler(Book* book);
 		void _deleteBookHandler(Book* book);

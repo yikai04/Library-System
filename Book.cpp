@@ -92,7 +92,7 @@ Book::Book() :
 	_remainBook(0),
 	_price(0),
 	_description(L""),
-	_imgUrl(""),
+	_imgUrl(L"blankBook.jpg"),
 	_borrowVolume(0),
 	_delFlg(false)
 {
@@ -236,6 +236,11 @@ std::wstring Book::getDescription()
 }
 
 std::string Book::getImgUrl()
+{
+	return wstring_to_string(_imgUrl);
+}
+
+std::wstring Book::getImgUrlWstring()
 {
 	return _imgUrl;
 }
@@ -453,9 +458,9 @@ bool Book::setDescription(std::wstring description)
 	return true;
 }
 
-bool Book::setImgUrl(std::string imgUrl)
+bool Book::setImgUrl(std::wstring imgUrl)
 {
-	if (!checkImgUrlValidaty(imgUrl))
+	if (!checkImgUrlValidaty(wstring_to_string(imgUrl)))
 	{
 		return false;
 	}
@@ -961,9 +966,9 @@ bool Book::changeDescription(std::wstring description)
 	}
 }
 
-bool Book::changeImgUrl(std::string imgUrl)
+bool Book::changeImgUrl(std::wstring imgUrl)
 {
-	if (!checkImgUrlValidaty(imgUrl))
+	if (!checkImgUrlValidaty(wstring_to_string(imgUrl)))
 	{
 		return false;
 	}
@@ -983,7 +988,7 @@ bool Book::changeImgUrl(std::string imgUrl)
 		return false;
 	}
 
-	rc = sqlite3_bind_text(stmt, 1, imgUrl.c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text16(stmt, 1, imgUrl.c_str(), -1, SQLITE_STATIC);
 	rc = sqlite3_bind_int(stmt, 2, _id);
 	if (rc != SQLITE_OK) {
 		std::cerr << "Failed to bind img url: " << sqlite3_errmsg(mDatabase) << std::endl;
@@ -1139,7 +1144,7 @@ std::vector<Book> Book::searchBooksInfo(std::wstring searchWord, const std::wstr
 
 	rc = sqlite3_step(stmt);
 	while (rc == SQLITE_ROW) {
-		int delFlg = sqlite3_column_int(stmt, 12);
+		int delFlg = sqlite3_column_int(stmt, 13);
 		if (!delFlg) {
 			Book book(sqlite3_column_int(stmt, 0));
 			books.push_back(book);
@@ -1198,7 +1203,7 @@ std::vector<Book> Book::searchBooksInfoByName(std::wstring bookName, const std::
 
 	rc = sqlite3_step(stmt);
 	while (rc == SQLITE_ROW) {
-		int delFlg = sqlite3_column_int(stmt, 12);
+		int delFlg = sqlite3_column_int(stmt, 13);
 		if (!delFlg) {
 			Book book(sqlite3_column_int(stmt, 0));
 			books.push_back(book);
@@ -1257,7 +1262,7 @@ std::vector<Book> Book::searchBooksInfoByAuthor(std::wstring author, const std::
 
 	rc = sqlite3_step(stmt);
 	while (rc == SQLITE_ROW) {
-		int delFlg = sqlite3_column_int(stmt, 12);
+		int delFlg = sqlite3_column_int(stmt, 13);
 		if (!delFlg) {
 			Book book(sqlite3_column_int(stmt, 0));
 			books.push_back(book);
@@ -1316,7 +1321,7 @@ std::vector<Book> Book::searchBooksInfoByPublisher(std::wstring publisher, const
 
 	rc = sqlite3_step(stmt);
 	while (rc == SQLITE_ROW) {
-		int delFlg = sqlite3_column_int(stmt, 12);
+		int delFlg = sqlite3_column_int(stmt, 13);
 		if (!delFlg) {
 			Book book(sqlite3_column_int(stmt, 0));
 			books.push_back(book);
@@ -1362,7 +1367,7 @@ int Book::addBook(Book* book)
 	rc = sqlite3_bind_int(stmt, 9, book->getRemainBook());
 	rc = sqlite3_bind_double(stmt, 10, book->getPrice());
 	rc = sqlite3_bind_text16(stmt, 11, book->getDescription().c_str(), -1, SQLITE_STATIC);
-	rc = sqlite3_bind_text(stmt, 12, book->getImgUrl().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text16(stmt, 12, book->getImgUrlWstring().c_str(), -1, SQLITE_STATIC);
 	rc = sqlite3_bind_int(stmt, 13, book->getBorrowVolume());
 	rc = sqlite3_bind_int(stmt, 14, book->getDelFlg());
 
@@ -1453,7 +1458,7 @@ int Book::updateBook(Book* book)
 	rc = sqlite3_bind_int(stmt, 8, book->getRemainBook());
 	rc = sqlite3_bind_double(stmt, 9, book->getPrice());
 	rc = sqlite3_bind_text16(stmt, 10, book->getDescription().c_str(), -1, SQLITE_STATIC);
-	rc = sqlite3_bind_text(stmt, 11, book->getImgUrl().c_str(), -1, SQLITE_STATIC);
+	rc = sqlite3_bind_text16(stmt, 11, book->getImgUrlWstring().c_str(), -1, SQLITE_STATIC);
 	rc = sqlite3_bind_int(stmt, 12, book->getBorrowVolume());
 	rc = sqlite3_bind_int(stmt, 13, book->getDelFlg());
 	rc = sqlite3_bind_int(stmt, 14, book->getBookId());
@@ -1550,7 +1555,7 @@ void Book::_loadBookInfosFromDB()
 		_remainBook = sqlite3_column_int(stmt, 8);
 		_price = sqlite3_column_double(stmt, 9);
 		_description = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 10));
-		_imgUrl = std::string((const char*)sqlite3_column_text(stmt, 11));
+		_imgUrl = std::wstring((const wchar_t*)sqlite3_column_text16(stmt, 11));
 		_borrowVolume = sqlite3_column_int(stmt, 12);
 		_delFlg = sqlite3_column_int(stmt, 13);
 	}
@@ -1566,7 +1571,7 @@ void Book::_loadBookInfosFromDB()
 		_remainBook = 0;
 		_price = 0;
 		_description = L"";
-		_imgUrl = "";
+		_imgUrl = L"blankBook.jpg";
 		_borrowVolume = 0;
 		_delFlg = false;
 	}

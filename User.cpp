@@ -393,7 +393,7 @@ int User::returnBook(std::wstring bookId, std::wstring userId)
 		}
 		else {
 			Book book(bookIdInt);
-			if (book.changeRemainBook(std::to_wstring(book.getRemainBook() + 1))) {
+			if (book.changeRemainBook(std::to_wstring(book.getRemainBook() + changes))) {
 				sqlite3_finalize(stmt);
 				return SUCESSFUL;
 			}

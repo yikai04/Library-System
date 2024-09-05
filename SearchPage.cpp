@@ -14,7 +14,7 @@ SearchPage::SearchPage(User& user, PageManager& pageManager) :
 
 	_booksDisplay(_font, [&](Book* book) {_bookDetailPopUpHandler(book); }),
 	_searchBar(700.0, sf::Vector2f(650, 220), L"搜索", _font, 42, [&]() {_searchBarHandler(); }),
-	_bookDetailPopUp(_font, false, false, false, [&](Book* book) {return _editBookHandler(book); }, [&](Book* book) {_deleteBookHandler(book); }),
+	_bookDetailPopUp(_font, false, false, false, [&](Book* book) {return _editBookHandler(book); }, [&](Book* book) {_deleteBookHandler(book); }, [&]() {_refreshBooksDisplay(); }),
 	_newBookButton(sf::Vector2f(150, 70), sf::Vector2f(1680, 250), sf::Color::Transparent, L"增加书籍", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_newBookHandler(); }),
 	_isNewBookButtonClicked(false),
 	_isCalledSearch(false),
@@ -186,6 +186,12 @@ void SearchPage::_logoutHandler()
 	_pageManager.setPage(Page::Login);
 }
 
+void SearchPage::_refreshBooksDisplay()
+{
+	std::vector<Book> allBooks = Book::searchBooksInfo();
+	_booksDisplay.setBooks(std::move(allBooks));
+}
+
 void SearchPage::_bookDetailPopUpHandler(Book* book)
 {
 	_bookDetailPopUp.setBook(book);
@@ -235,6 +241,7 @@ void SearchPage::_deleteBookHandler(Book* book)
 {
 	if (_user.getSelfUserInfo().getRole() == UserType::Admin) {
 		book->deleteBook(book);
+		_refreshBooksDisplay();
 	}
 }
 
