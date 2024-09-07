@@ -5,17 +5,17 @@
 StatisticsPage::StatisticsPage(User& user, PageManager& pageManager) :
 	PageBase(user, pageManager),
 
-	_topBarButton1(sf::Vector2f(100, 70), sf::Vector2f(720, 80), sf::Color::Transparent, L"首页", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Home); }),
-	_topBarButton2(sf::Vector2f(100, 70), sf::Vector2f(870, 80), sf::Color::Transparent, L"书架", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Search); }),
-	_topBarButton3(sf::Vector2f(150, 70), sf::Vector2f(1020, 80), sf::Color::Transparent, L"借阅记录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Records); }),
-	_topBarButton4(sf::Vector2f(210, 70), sf::Vector2f(1220, 80), sf::Color::Transparent, L"书籍统计分析", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Statistics); }),
+	_topBarButton1(sf::Vector2f(100, 70), sf::Vector2f(790, 80), sf::Color::Transparent, L"首页", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Home); }),
+	_topBarButton2(sf::Vector2f(100, 70), sf::Vector2f(940, 80), sf::Color::Transparent, L"书架", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Search); }),
+	_topBarButton3(sf::Vector2f(150, 70), sf::Vector2f(1080, 80), sf::Color::Transparent, L"借阅记录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Records); }),
+	_topBarButton4(sf::Vector2f(150, 70), sf::Vector2f(1280, 80), sf::Color::Transparent, L"统计分析", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Statistics); }),
 	_topBarButton5(sf::Vector2f(150, 70), sf::Vector2f(1480, 80), sf::Color::Transparent, L"用户设置", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Setting); }),
 	_topBarButton6(sf::Vector2f(100, 70), sf::Vector2f(1680, 80), sf::Color::Transparent, L"登录", _font, 30, 33, sf::Color::Black, sf::Color(203, 140, 63, 255), [&]() {_pageManager.setPage(Page::Login); }),
 
 	_topBorrowedBooksTable(sf::Vector2f(800, 650), sf::Vector2f(130, 250), _font, 20, { L"排名", L"书名", L"借阅量" }, { 200.f, 400.f, 200.f }, 50.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false, [&](Book* book) {_bookDetailPopUpHandler(book); }, [](UserInfo* userInfo) {}, ALL_COLUMNS, -1),
 	_topBorrowedUsersTable(sf::Vector2f(800, 650), sf::Vector2f(1000, 250), _font, 20, { L"排名", L"用户名", L"借阅量" }, { 200.f, 400.f, 200.f }, 50.f, sf::Color(203, 140, 63, 128), sf::Color(240, 210, 170, 128), sf::Color(229, 182, 127, 128), false, [](Book* book) {}, [&](UserInfo* userInfo) {_userDetailEditHandler(userInfo); }, -1, ALL_COLUMNS),
-	_topBorrowedBooksTitle(sf::Vector2f(800, 70), sf::Vector2f(130, 180), _font, 40, sf::Color::Transparent, L"借阅量最多的书籍", L"借阅量最多的书籍", false),
-	_topBorrowedUsersTitle(sf::Vector2f(800, 70), sf::Vector2f(1000, 180), _font, 40, sf::Color::Transparent, L"借阅量最多的用户", L"借阅量最多的用户", false),
+	_topBorrowedBooksTitle(sf::Vector2f(800, 70), sf::Vector2f(130, 180), _font, 40, sf::Color::Transparent, L"书籍借阅量排名", L"书籍借阅量排名", false),
+	_topBorrowedUsersTitle(sf::Vector2f(800, 70), sf::Vector2f(1000, 180), _font, 40, sf::Color::Transparent, L"用户借阅量排名", L"用户借阅量排名", false),
 	_bookDetailPopUp(_font)
 {
 	_backgroundTexture.loadFromFile("Image/Background(1920x1080).png");
